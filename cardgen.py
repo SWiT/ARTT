@@ -21,7 +21,7 @@ imgfile = "temp.png" # Temporary image file name.
 
 pretext = ""
 cnstart = 0
-cnend = 8
+cnend = 52
 posttext = ""
 outputfile = ""
 
@@ -76,13 +76,11 @@ def drawCard(pos, text):
     x = pos[0]
     y = pos[1]    
     
-    pdf.drawInlineImage(imgfile, x, y+((cheight-cwidth)*inch), width=2.5*inch, height=2.5*inch)
+    pdf.drawInlineImage(imgfile, x-(0.23*inch), y+((cheight-cwidth)*inch)-(0.28*inch), width=3*inch, height=3*inch)
 
-    pdf.setFont("Helvetica", 12)
-    pdf.drawCentredString(x+(0.5*cwidth*inch),y+(0.125*inch), text)
+    pdf.setFont("Helvetica", 9)
+    pdf.drawCentredString(x+(0.5*cwidth*inch),y+(0.0625*inch), text)
 
-    
-    #y -= 0.8*inch
     return
 
 #----------------------------

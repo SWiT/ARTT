@@ -43,6 +43,8 @@ def drawTemplateLines():
     global inch, pdf
     pdf.setLineWidth(0.5)
     pdf.setDash([1,1], 0)
+    pdf.setStrokeColorRGB(0.85,0.85,0.85)
+
     #Rows
     x1 = 0; y1 = margin*inch
     x2 = 8.5*inch; y2 = margin*inch
@@ -75,12 +77,10 @@ def drawTemplateLines():
 def drawCard(pos, text):
     x = pos[0]
     y = pos[1]    
-    
     pdf.drawInlineImage(imgfile, x-(0.23*inch), y+((cheight-cwidth)*inch)-(0.28*inch), width=3*inch, height=3*inch)
-
-    pdf.setFont("Helvetica", 9)
+    #pdf.setFillColorRGB(128,128,128)
+    pdf.setFont("Helvetica", 7)
     pdf.drawCentredString(x+(0.5*cwidth*inch),y+(0.0625*inch), text)
-
     return
 
 #----------------------------
@@ -123,7 +123,7 @@ for cn in range(cnstart, cnend+1):
     dmtext += pretext
     dmtext +=  str(cn).zfill(2)
     dmtext += posttext
-    print dmtext
+    
     DM.writeDM(dmtext, imgfile)
     
     # There seems to be a bug in reportlab.

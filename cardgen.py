@@ -78,7 +78,7 @@ def drawCard(pos, text):
     x = pos[0]
     y = pos[1]    
     pdf.drawInlineImage(imgfile, x-(0.23*inch), y+((cheight-cwidth)*inch)-(0.28*inch), width=3*inch, height=3*inch)
-    #pdf.setFillColorRGB(128,128,128)
+    pdf.setFillColorRGB(0.85,0.85,0.85)
     pdf.setFont("Helvetica", 7)
     pdf.drawCentredString(x+(0.5*cwidth*inch),y+(0.0625*inch), text)
     return

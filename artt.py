@@ -27,41 +27,50 @@ while True:
         Arena.deepScan()
     outputImg = Arena.render() 
     
-    #Read from each bots serial device
-    for bot in Arena.bot:                   
-        if bot.sdi != -1:
-            data = bot.serial.readline()            
-            if data.strip() == "$W":
-                reply = "{0:["
-                #{0:[[x, y, heading, alive, botid, teamid],...]}
-                for sbot in Arena.bot:
-                    reply += "["
-                    reply += str(sbot.locZone[0])
-                    reply += ","+str(sbot.locZone[1])
-                    reply += ","+str(sbot.heading)
-                    reply += ","+str(sbot.alive)
-                    reply += ","+str(sbot.id)
-                    reply += ","+str(sbot.id)
-                    reply += "]"
-                reply += "]}\n"
-                print reply.strip()
-                bot.serial.write(reply)
-            else:
-                print "'"+data.strip()+"'"
-            
     controlPanelImg = Arena.ui.drawControlPanel(Arena)
 
-    #Display the image or frame of video
+    # Display the image or frame of video
     if size(outputImg,0) > 0 and size(outputImg,1) > 0:
         outputImg = Arena.ui.resize(outputImg)
         cv2.imshow("ArenaScanner", outputImg)
     
+    # Display the control panel
     cv2.imshow("ArenaControlPanel", controlPanelImg)
 
-    blank_image = zeros((590,800,3), uint8)
-    blank_image[:,:] = (255,255,255)
-    #TODO:import the corner images
-    cv2.imshow("ArenaProjector", blank_image)
+    # Create a blank output image for the projector.
+    projectorimage = zeros((570,800,3), uint8)
+    projectorimage[:,:] = (254,254,254)
+
+    pih = projectorimage.shape[0]
+    piw = projectorimage.shape[1]
+
+    # Import the corner images
+    corner = cv2.imread("images/C0.png")
+    ch = corner.shape[0]
+    cw = corner.shape[1]
+    yoffset = pih - ch
+    xoffset = 0
+    projectorimage[yoffset:(ch+yoffset),xoffset:(cw+xoffset)] = corner
+
+    corner = cv2.imread("images/C1.png")
+    yoffset = pih - ch
+    xoffset = piw - cw
+    projectorimage[yoffset:(ch+yoffset),xoffset:(cw+xoffset)] = corner
+
+    corner = cv2.imread("images/C2.png")
+    yoffset = 0
+    xoffset = piw - cw
+    projectorimage[yoffset:(ch+yoffset),xoffset:(cw+xoffset)] = corner
+    
+    corner = cv2.imread("images/C3.png")
+    yoffset = 0
+    xoffset = 0
+    projectorimage[yoffset:(ch+yoffset),xoffset:(cw+xoffset)] = corner
+
+    # Translate the position from the camera to a position for the projector.
+
+    # Display the projector
+    cv2.imshow("ArenaProjector", projectorimage)
 
     Arena.ui.calcFPS()
 

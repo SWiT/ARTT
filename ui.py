@@ -20,8 +20,11 @@ class UI:
         self.displaySize = 50
         self.displayMode = 1
         self.numzones = 1
+
         self.frametime = time.time()
         self.fps = 0
+        self.frametimes = []
+
         self.exit = False
         return
     
@@ -56,11 +59,22 @@ class UI:
     def menuSpacer(self):
         self.menurows.append("space")
         self.pt = (self.pt[0],self.pt[1]+self.lh)
+        return
     
     #Calculate FPS
-    def calcFPS(self):    
-        self.fps = int(1/(time.time() - self.frametime))
-        self.frametime = time.time()
+    def calcFPS(self):
+        now = time.time()
+        timediff = now - self.frametime
+#        self.fps = int(1/(now - self.frametime))
+        
+        self.frametimes.append(timediff)
+        if len(self.frametimes) > 30:
+            self.frametimes = self.frametimes[1:]
+ 
+        self.fps = int(len(self.frametimes)/sum(self.frametimes))
+       
+        self.frametime = now
+        return
     
     def onMouse(self,event,x,y,flags,param):
         #print "Mouse:",event,x,y,flags

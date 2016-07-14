@@ -21,7 +21,7 @@ imgfile = "temp.png" # Temporary image file name.
 
 pretext = ""
 cnstart = 0
-cnend = 52
+cnend = 8
 posttext = ""
 outputfile = ""
 
@@ -33,7 +33,7 @@ def displayHelp():
     print "OPTIONS:"
     print "\t--pre \"TEXT\"\t\ttext to add before the card number"
     print "\t--start [#]\t\tstarting card number (default: 00)"
-    print "\t--end [#]\t\tending card number (default: 52)"
+    print "\t--end [#]\t\tending card number (default: 08)"
     print "\t--post \"TEXT\"\t\ttext to add after the card number"
     print ""
 
@@ -89,14 +89,18 @@ def drawCard(pos, text):
 
 # Parse options and parameters.
 for index, arg in enumerate(sys.argv):
-    if arg == "--pre":   
+    if arg == "--help":   
+        displayHelp()
+        quit()
+
+    elif arg == "--pre":   
         pretext = sys.argv[index+1]
 
     elif arg == "--start":   
-        cnstart = sys.argv[index+1]
+        cnstart = int(sys.argv[index+1])
 
     elif arg == "--end":   
-        cnend = sys.argv[index+1]
+        cnend = int(sys.argv[index+1])
 
     elif arg == "--post":   
         posttest = sys.argv[index+1]

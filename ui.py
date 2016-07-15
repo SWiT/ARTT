@@ -65,8 +65,6 @@ class UI:
     def calcFPS(self):
         now = time.time()
         timediff = now - self.frametime
-#        self.fps = int(1/(now - self.frametime))
-        
         self.frametimes.append(timediff)
         if len(self.frametimes) > 30:
             self.frametimes = self.frametimes[1:]

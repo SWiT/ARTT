@@ -190,7 +190,7 @@ class UI:
             
         self.menuSpacer()
             
-        # Draw Zone POI statuses
+        # Draw zone corner statuses
         for z in Arena.zone:
             for corner in z.corners:
                 output = "Z"+str(z.id)+" C"+str(corner.symbolvalue)+":"

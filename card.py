@@ -1,6 +1,8 @@
 import time, math, re, os
 from utils import *
 
+idmin   = 0 
+idmax   = 53
 
 class Card:
     def __init__(self, idx):

@@ -96,6 +96,11 @@ class Arena:
                 match = self.cardPattern.match(content)
                 if match:
                     cardid = int(match.group(1))
+                    #don't update invalid card numbers.
+                    if cardid < card.idmin or card.idmax < cardid :
+                        print cardid,"invalid"
+                        continue
+
                     try:
                         c = self.cards[cardid]
                         

@@ -6,38 +6,27 @@ from utils import *
 
 class Arena:    
     def __init__(self):
-        self.numzones = 1    #number of Zones
-        self.numbots = 2     #number of bots
-        self.x = 0           #maximum X value
-        self.y = 0           #maximum Y value
-        self.zone = []
-        self.bot = []
-        self.gameon = False
+        self.numzones = 1    #default number of Zones
+        self.zones = []
+        self.symbols = []
         self.videodevices = []
-        self.serialdevices = []
-        self.botPattern = re.compile('^(\d{2})$')
+        
+        self.cardPattern = re.compile('^(\d{2})$')
         self.cornerPattern = re.compile('^C(\d)$')
         
-        #Get lists of video and serial devices
+        #Get lists of video devices
         video_pattern = re.compile('^video(\d)$')
-        serial_pattern = re.compile('^rfcomm(\d)$')
         for dev in os.listdir('/dev/'):
             match = video_pattern.match(dev)
             if match:
                 self.videodevices.append('/dev/'+dev)
-            match = serial_pattern.match(dev)
-            if match:
-                self.serialdevices.append('/dev/'+dev)     
         if len(self.videodevices) == 0:
             raise SystemExit('No video device found. (/dev/video#)')
         self.videodevices.sort()  
-        self.serialdevices.sort()
-        #print self.serialdevices
         self.buildZones()
-        self.buildBots()
         
         self.ui = ui.UI()
-        self.dm = dm.DM(self.numbots + 8, 500)
+        self.dm = dm.DM(1, 500)
         return
         
     def updateNumberOfZones(self):
@@ -55,46 +44,8 @@ class Arena:
         for idx in range(0,self.numzones):
             self.zone.append(zone.Zone(idx, self.videodevices))
   
-    def updateNumBots(self):
-        self.numbots += 1
-        if self.numbots > 4:
-            self.numbots = 0
-        self.buildBots()
-        return self.numbots
-    
-    def buildBots(self):
-        self.bot = []
-        for idx in range(0,self.numbots):
-            self.bot.append(bot.Bot(idx, self.serialdevices))
-        return
-    
-    def toggleGameOn(self):
-        self.gameon = False if self.gameon else True
-        return
-    
-    def allFound(self):
-        allfound = True
-        for bot in self.bot:
-            allfound = allfound and bot.found
-            
-        for z in self.zone:
-            for c in z.corners:
-                allfound = allfound and c.found
-        return allfound
-
-
-    def resetFound(self):
-        for bot in self.bot:
-            bot.found = False
-            
-        for z in self.zone:
-            for c in z.corners:
-                c.found = False
-        return
-
-
     def targettedScan(self):
-        self.dm.setMaxCount(1)
+        # Get the latest image for the zone.
         for z in self.zone:
             z.getImage()
             
@@ -154,12 +105,10 @@ class Arena:
                             
                             corner.found = True
                             
-                #Bot Symbol
+                #Card Symbol
                 match = self.botPattern.match(content)
                 if match:
-                    botId = int(match.group(1))
-                    if botId < 0 or self.numbots <=botId:
-                        continue
+                    cardid = int(match.group(1))
                     bot = self.bot[botId]
                     bot.setData(symbol, z)    #update the bot's data
                     bot.found = True
@@ -167,6 +116,11 @@ class Arena:
         #End of zone loop
         return
 
+    def scan(self):
+        for z in self.zone:
+            z.getImage()
+        #End of zone loop
+        return
 
     def render(self):
         #Start Output Image

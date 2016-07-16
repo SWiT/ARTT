@@ -6,26 +6,22 @@ import arena, projector
 ###############
 ## SETUP
 ###############
-Arena = arena.Arena()
-
 cv2.namedWindow("ArenaScanner")
 cv2.namedWindow("ArenaProjector")
 cv2.namedWindow("ArenaControlPanel")
 cv2.startWindowThread()
 
 cv2.createTrackbar('Scan (ms)', 'ArenaControlPanel', Arena.dm.timeout, 1000, Arena.dm.setTimeout)
-#cv2.createTrackbar('Threshold0', 'ArenaControlPanel', Arena.zone[0].threshold, 255, Arena.zone[0].setThreshold)
 cv2.setMouseCallback("ArenaControlPanel", Arena.ui.onMouse, Arena)
+
+Arena = arena.Arena()
 
 ###############
 ## LOOP
 ###############
 while True:
     # Scan the arena for symbols.
-    if Arena.allFound():
-        Arena.targettedScan()
-    else:
-        Arena.deepScan()
+    Arena.scan():
 
     # Render the output of the arena.
     outputImg = Arena.render() 

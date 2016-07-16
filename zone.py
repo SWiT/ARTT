@@ -7,12 +7,12 @@ class Corner:
         self.zid = zid
         self.idx = idx
         self.location = (-1, -1)
-        self.symbolvalue = zid*4 + idx
+        self.symbolvalue = idx
         self.symbolcenter = (-1,-1)
         self.scanDistance = 0
         self.time = time.time()
-        self.symboldimension = 4.1875
-        self.gap = 1.625
+        self.symboldimension = 10
+        self.gap = 1
         self.symbol = None
         self.found = False
         return
@@ -22,7 +22,7 @@ class Corner:
         self.location = symbol[self.idx]
         self.symbolcenter = findCenter(symbol)
         
-        offset = int(self.gap * (symbol[1][0]-symbol[0][0]) / self.symboldimension)
+        offset = int((symbol[1][0]-symbol[0][0]) * self.gap / self.symboldimension)
         offset_x_sign = 1 if (self.idx%3 != 0) else -1
         offset_y_sign = 1 if (self.idx < 2) else -1
         
@@ -33,34 +33,31 @@ class Corner:
 class Zone:
     used_vdi = []
     def __init__(self, idx, videodevices):
-        self.id = idx
-        self.vdi = idx
-        self.videodevices = videodevices
-        self.actualsize = (72, 48) #zone size in inches
-        self.v4l2ucp = -1
-        self.cap = -1        #capture device object (OpenCV)
+        self.id = idx   # Zone ID
+        self.vdi = idx  # Video ID
+        self.videodevices = videodevices    # list of video devices
+        self.actualsize = (72, 48) # Zone size in inches
+        self.v4l2ucp = -1   # Flag for v4l2ucp sub process
+        self.cap = -1        # Capture device object (OpenCV)
         self.resolutions = [(640,480),(1280,720),(1920,1080)]
-        self.ri = 1          #selected Resolution Index
+        self.ri = 1          # Selected resolution Index
         
         self.image = None
-        self.threshold = 219
-        self.imageThresh = None
         self.width = 0;
         self.height = 0;
-        
+    
+        # Add the corners.        
         self.corners = []
         self.corners.append(Corner(idx, 0))
         self.corners.append(Corner(idx, 1))
         self.corners.append(Corner(idx, 2))
         self.corners.append(Corner(idx, 3))
         
+        self.calibrated = False # All corners were found.
+
         self.initVideoDevice()
         return
         
-    def setThreshold(self, v):
-        self.threshold = v
-        return
-    
     def getImage(self):
         #skip if capture is disabled
         if self.cap == -1:
@@ -76,10 +73,6 @@ class Zone:
             
         self.width = size(self.image, 1)
         self.height = size(self.image, 0)
-        
-        #Threshold the image for leds
-        self.imageThresh = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY) #convert to grayscale
-        ret,self.imageThresh = cv2.threshold(self.imageThresh, self.threshold, 255, cv2.THRESH_BINARY)
             
         return True
         

@@ -37,7 +37,7 @@ class Projector:
             xoffset = 0
             self.baseimg[yoffset:(ch+yoffset),xoffset:(cw+xoffset)] = corner
             
-            # Save base arena as an image file.
+            # Save base arena as an image file, for later use.
             cv2.imwrite(filename, self.baseimg)
 
         self.outputimg = self.baseimg

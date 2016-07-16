@@ -1,14 +1,14 @@
 import re, os, cv2, time, re
 from numpy import *
 
-import bot, zone, ui, dm
+import card, zone, ui, dm
 from utils import *
 
 class Arena:    
     def __init__(self):
         self.numzones = 1    #default number of Zones
         self.zones = []
-        self.symbols = []
+        self.cards = []
         self.videodevices = []
         
         self.cardPattern = re.compile('^(\d{2})$')
@@ -24,9 +24,10 @@ class Arena:
             raise SystemExit('No video device found. (/dev/video#)')
         self.videodevices.sort()  
         self.buildZones()
+        self.buildZones()
         
         self.ui = ui.UI()
-        self.dm = dm.DM(1, 500)
+        self.dm = dm.DM(1, 200)
         return
         
     def updateNumberOfZones(self):
@@ -49,13 +50,13 @@ class Arena:
         for z in self.zone:
             z.getImage()
             
-        for bot in self.bot:
-            bot.scanDistance = int(dist(bot.symbol[0], bot.symbol[1]) * 1.5)
-            z = self.zone[bot.zid]
-            xmin = bot.locZonePx[0] - bot.scanDistance
-            xmax = bot.locZonePx[0] + bot.scanDistance
-            ymin = bot.locZonePx[1] - bot.scanDistance
-            ymax = bot.locZonePx[1] + bot.scanDistance
+        for card in self.cards:
+            card.scanDistance = int(dist(card.symbol[0], card.symbol[1]) * 1.5)
+            z = self.zone[card.zid]
+            xmin = card.locZonePx[0] - card.scanDistance
+            xmax = card.locZonePx[0] + card.scanDistance
+            ymin = card.locZonePx[1] - card.scanDistance
+            ymax = card.locZonePx[1] + card.scanDistance
             if xmin < 0:
                 xmin = 0
             if xmax > z.width:
@@ -67,58 +68,44 @@ class Arena:
             roi = z.image[ymin:ymax,xmin:xmax]
             
             #Scan for DataMatrix
-            if time.time() - bot.time > .5:
-                bot.found = False
+            if time.time() - card.time > .5:
+                card.found = False
             self.dm.scan(roi, offsetx = xmin, offsety = ymin)
             for content,symbol in self.dm.symbols:
-               match = self.botPattern.match(content)
+               match = self.cardPattern.match(content)
                if match:
-                   if int(match.group(1)) == bot.id and size(self.zone) > bot.zid:
-                       bot.setData(symbol, z)    #update the bot's data
-                       bot.found = True
+                   if int(match.group(1)) == card.id and size(self.zone) > card.zid:
+                       card.setData(symbol, z)    #update the card's data
                        
-            if not bot.found:
+            if not card.found:
                 #try the other zone
-                print "Bot",bot.id, "Z",bot.zid, bot.locArena, time.time() - bot.time
+                print "Card",card.id, "Z",card.zid, card.locArena, time.time() - card.time
         return
-        
-        
-    def deepScan(self):
-        print "deepScan()"  
-        maxcount =  self.numbots + 8
-        self.dm.setMaxCount(maxcount)
-        for z in self.zone:
-            z.getImage()
-        
-            #Scan for DataMatrix
-            self.dm.scan(z.image)
-        
-            #For each detected DataMatrix symbol
-            for content,symbol in self.dm.symbols:
-                #Zone Corners
-                match = self.cornerPattern.match(content)
-                if match:
-                    sval = int(match.group(1))
-                    for corner in z.corners:
-                        if sval == corner.symbolvalue:
-                            corner.setData(symbol)
-                            
-                            corner.found = True
-                            
-                #Card Symbol
-                match = self.botPattern.match(content)
-                if match:
-                    cardid = int(match.group(1))
-                    bot = self.bot[botId]
-                    bot.setData(symbol, z)    #update the bot's data
-                    bot.found = True
 
-        #End of zone loop
-        return
 
     def scan(self):
         for z in self.zone:
             z.getImage()
+
+            # Scan for DataMatrix
+            self.dm.scan(z.image)
+
+            # For each detected DataMatrix symbol
+            for content,symbol in self.dm.symbols:
+                # Card Symbol
+                match = self.cardPattern.match(content)
+                if match:
+                    cardid = int(match.group(1))
+                    self.card[cardid].setData(symbol, z)    #update the cards's datac
+                    continue;
+
+                # Zone Corner
+                match = self.cornerPattern.match(content)
+                if match:
+                    cid = int(match.group(1))
+                    z.corners[cid].setData(symbol)
+                    continue;
+
         #End of zone loop
         return
 

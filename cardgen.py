@@ -128,7 +128,7 @@ for cn in range(cnstart, cnend+1):
     dmtext +=  str(cn).zfill(2)
     dmtext += posttext
     
-    DM.writeDM(dmtext, imgfile)
+    DM.write(dmtext, imgfile)
     
     # There seems to be a bug in reportlab.
     # Strings are drawn in the A4 template even though we've set the pagesize to letter.

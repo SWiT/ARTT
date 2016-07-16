@@ -1,34 +1,7 @@
 import cv2, time, subprocess
 from numpy import *
 from utils import *
-
-class Corner:
-    def __init__(self, zid, idx):
-        self.zid = zid
-        self.idx = idx
-        self.location = (-1, -1)
-        self.symbolvalue = idx
-        self.symbolcenter = (-1,-1)
-        self.scanDistance = 0
-        self.time = time.time()
-        self.symboldimension = 10
-        self.gap = 1
-        self.symbol = None
-        self.found = False
-        return
-    
-    def setData(self, symbol):
-        self.symbol = symbol
-        self.location = symbol[self.idx]
-        self.symbolcenter = findCenter(symbol)
-        
-        offset = int((symbol[1][0]-symbol[0][0]) * self.gap / self.symboldimension)
-        offset_x_sign = 1 if (self.idx%3 != 0) else -1
-        offset_y_sign = 1 if (self.idx < 2) else -1
-        
-        self.location = (self.location[0] + offset_x_sign * offset, self.location[1] + offset_y_sign * offset)
-        self.time = time.time()
-        return
+import corner
 
 class Zone:
     used_vdi = []
@@ -36,28 +9,34 @@ class Zone:
         self.id = idx   # Zone ID
         self.vdi = idx  # Video ID
         self.videodevices = videodevices    # list of video devices
-        self.actualsize = (72, 48) # Zone size in inches
+        self.gridsize = (25, 18) # Grid size to apply to the zone. (inches or cm)
         self.v4l2ucp = -1   # Flag for v4l2ucp sub process
         self.cap = -1        # Capture device object (OpenCV)
         self.resolutions = [(640,480),(1280,720),(1920,1080)]
         self.ri = 1          # Selected resolution Index
         
         self.image = None
+        self.roi = None
         self.width = 0;
         self.height = 0;
     
         # Add the corners.        
         self.corners = []
-        self.corners.append(Corner(idx, 0))
-        self.corners.append(Corner(idx, 1))
-        self.corners.append(Corner(idx, 2))
-        self.corners.append(Corner(idx, 3))
+        self.corners.append(corner.Corner(idx, 0))
+        self.corners.append(corner.Corner(idx, 1))
+        self.corners.append(corner.Corner(idx, 2))
+        self.corners.append(corner.Corner(idx, 3))
         
-        self.calibrated = False # All corners were found.
-
         self.initVideoDevice()
         return
-        
+
+    # All corners were found.
+    def calibrated(self):
+        for c in self.corners:
+            if not c.found:
+                return False
+        return True
+
     def getImage(self):
         #skip if capture is disabled
         if self.cap == -1:

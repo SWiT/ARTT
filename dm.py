@@ -40,7 +40,7 @@ class DM:
         self.loadReader()
         return
         
-    def writeDM(self, v, fn):
+    def write(self, v, fn):
         # Write a Data Matrix barcode
         dm_write = DataMatrix()
         dm_write.encode(v)

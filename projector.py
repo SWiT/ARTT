@@ -6,6 +6,7 @@ class Projector:
     def __init__(self, height, width):
         self.width = width
         self.height = height
+        #TODO: generate Corner symbols on the fly based on a size value.
         filename = "images/arena_" + str(self.width) + "_" + str(self.height) + ".png"
         self.baseimg = cv2.imread(filename)
         if self.baseimg == None:

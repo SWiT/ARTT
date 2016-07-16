@@ -4,7 +4,7 @@ from numpy import *
 import card, zone, ui, dm
 from utils import *
 
-class Arena:    
+class Arena:
     def __init__(self):
         self.numzones = 1    #default number of Zones
         self.zones = []
@@ -132,13 +132,20 @@ class Arena:
         
         for z in self.zone:
             if self.ui.isDisplayed(z.id):
-                if self.ui.displayMode == 0:
-                    img = cv2.cvtColor(z.imageThresh, cv2.COLOR_GRAY2BGR)
-                elif self.ui.displayMode >= 2:
-                    img = zeros((z.height, z.width, 3), uint8) #create a blank image
+                # Prepare image based on display mode.
+                if self.ui.displayMode == self.ui.DATAONLY:
+                    img = zeros((z.height, z.width, 3), uint8) # Create a blank image
                 else:
                     img = z.image
-                    
+                
+                # If we are only displaying the source image we are done.
+                if self.ui.displayMode == self.ui.SOURCE:
+                    if self.ui.displayAll():
+                        outputImg[0:z.height, z.id*z.width:(z.id+1)*z.width] = img
+                    else:
+                        outputImg = img
+                    continue;              
+    
                 # Draw Objects on Scanner window if this zone is displayed
                 # Crosshair in center
                 pt0 = (z.width/2, z.height/2-5)

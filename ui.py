@@ -26,6 +26,11 @@ class UI:
         self.frametimes = []
 
         self.exit = False
+
+        # Display Modes
+        self.SOURCE      = 0
+        self.OVERLAY     = 1    
+        self.DATAONLY    = 2
         return
     
     def isDisplayed(self,idx):
@@ -36,7 +41,7 @@ class UI:
         
     def updateDisplayMode(self):
         self.displayMode += 1
-        if self.displayMode > 3:
+        if self.displayMode > 2:
             self.displayMode = 0
         return
     
@@ -86,9 +91,6 @@ class UI:
                     
                 elif self.menurows[rowClicked] == "exit":
                     self.exit = True
-                    
-                elif self.menurows[rowClicked] == "gameon":
-                    Arena.toggleGameOn()
                     
                 elif self.menurows[rowClicked] == "displaymode":
                     self.updateDisplayMode()
@@ -159,11 +161,11 @@ class UI:
         
         #Display Mode Labels
         output = "Mode: "      
-        if self.displayMode == 0: #display source image
-            output += "Source"   
-        elif self.displayMode == 1: #display source with data overlay
+        if self.displayMode == self.SOURCE:   # Display source image
+            output += "Source"
+        elif self.displayMode == self.OVERLAY: # Display source with data overlay
             output += "Overlay"
-        elif self.displayMode == 2: #display only data overlay
+        elif self.displayMode == self.DATAONLY: # Display data only
             output += "Data Only"
         cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
 

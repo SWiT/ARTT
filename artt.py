@@ -11,17 +11,18 @@ cv2.namedWindow("ArenaProjector")
 cv2.namedWindow("ArenaControlPanel")
 cv2.startWindowThread()
 
+Arena = arena.Arena() # Initialize the arena.
+
 cv2.createTrackbar('Scan (ms)', 'ArenaControlPanel', Arena.dm.timeout, 1000, Arena.dm.setTimeout)
 cv2.setMouseCallback("ArenaControlPanel", Arena.ui.onMouse, Arena)
 
-Arena = arena.Arena()
 
 ###############
 ## LOOP
 ###############
 while True:
     # Scan the arena for symbols.
-    Arena.scan():
+    Arena.scan()
 
     # Render the output of the arena.
     outputImg = Arena.render() 

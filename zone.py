@@ -1,4 +1,4 @@
-import cv2, time, subprocess
+import cv2, subprocess
 from numpy import *
 from utils import *
 import corner

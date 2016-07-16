@@ -8,7 +8,7 @@ class Arena:
     def __init__(self):
         self.numzones = 1    #default number of Zones
         self.zones = []
-        self.cards = []
+        self.cards = dict()
         self.videodevices = []
         
         self.cardPattern = re.compile('^(\d{2})$')
@@ -23,7 +23,7 @@ class Arena:
         if len(self.videodevices) == 0:
             raise SystemExit('No video device found. (/dev/video#)')
         self.videodevices.sort()  
-        self.buildZones()
+        
         self.buildZones()
         
         self.ui = ui.UI()
@@ -38,7 +38,7 @@ class Arena:
         return self.numzones
         
     def buildZones(self):
-        for z in self.zone:
+        for z in self.zones:
             z.close()
             z.used_vdi = []
         self.zone = []
@@ -50,13 +50,13 @@ class Arena:
         for z in self.zone:
             z.getImage()
             
-        for card in self.cards:
-            card.scanDistance = int(dist(card.symbol[0], card.symbol[1]) * 1.5)
-            z = self.zone[card.zid]
-            xmin = card.locZonePx[0] - card.scanDistance
-            xmax = card.locZonePx[0] + card.scanDistance
-            ymin = card.locZonePx[1] - card.scanDistance
-            ymax = card.locZonePx[1] + card.scanDistance
+        for k, c in self.cards.iteritems():
+            c.scanDistance = int(dist(c.symbol[0], c.symbol[1]) * 1.5)
+            z = self.zone[c.zid]
+            xmin = c.locZonePx[0] - c.scanDistance
+            xmax = c.locZonePx[0] + c.scanDistance
+            ymin = c.locZonePx[1] - c.scanDistance
+            ymax = c.locZonePx[1] + c.scanDistance
             if xmin < 0:
                 xmin = 0
             if xmax > z.width:
@@ -68,18 +68,18 @@ class Arena:
             roi = z.image[ymin:ymax,xmin:xmax]
             
             #Scan for DataMatrix
-            if time.time() - card.time > .5:
-                card.found = False
+            if time.time() - c.time > .5:
+                c.found = False
             self.dm.scan(roi, offsetx = xmin, offsety = ymin)
             for content,symbol in self.dm.symbols:
                match = self.cardPattern.match(content)
                if match:
-                   if int(match.group(1)) == card.id and size(self.zone) > card.zid:
-                       card.setData(symbol, z)    #update the card's data
+                   if int(match.group(1)) == c.id and size(self.zone) > c.zid:
+                       c.setData(symbol, z)    #update the card's data
                        
-            if not card.found:
+            if not c.found:
                 #try the other zone
-                print "Card",card.id, "Z",card.zid, card.locArena, time.time() - card.time
+                print "Card",c.id, "Z",c.zid, c.locArena, time.time() - c.time
         return
 
 
@@ -96,7 +96,13 @@ class Arena:
                 match = self.cardPattern.match(content)
                 if match:
                     cardid = int(match.group(1))
-                    self.card[cardid].setData(symbol, z)    #update the cards's datac
+                    try:
+                        c = self.cards[cardid]
+                        
+                    except KeyError:
+                        c = card.Card(cardid)
+                        self.cards[cardid] = c
+                    c.setData(symbol, z)    #update the cards's data
                     continue;
 
                 # Zone Corner
@@ -110,8 +116,8 @@ class Arena:
         return
 
     def render(self):
-        #Start Output Image
-        #create a blank image
+        # Start Output Image
+        # Create a blank image
         if self.ui.displayAll():
             widthAll = 0
             heightAll = 0
@@ -133,8 +139,8 @@ class Arena:
                 else:
                     img = z.image
                     
-                #Draw Objects on Scanner window if this zone is displayed
-                #Crosshair in center
+                # Draw Objects on Scanner window if this zone is displayed
+                # Crosshair in center
                 pt0 = (z.width/2, z.height/2-5)
                 pt1 = (z.width/2, z.height/2+5)
                 cv2.line(img, pt0, pt1, self.ui.COLOR_PURPLE, 1)
@@ -142,7 +148,7 @@ class Arena:
                 pt1 = (z.width/2+5, z.height/2)
                 cv2.line(img, pt0, pt1, self.ui.COLOR_PURPLE, 1)
                 
-                #Zone edges
+                # Zone edges
                 corner_pts = []
                 for corner in z.corners:
                     corner_pts.append(corner.location)
@@ -157,17 +163,17 @@ class Arena:
                         cv2.putText(img, str(corner.symbolvalue), pt, cv2.FONT_HERSHEY_PLAIN, 1.5, self.ui.COLOR_BLUE, 2)
                 drawBorder(img, corner_pts, self.ui.COLOR_BLUE, 2)
                 
-                #Last Known Bot Locations
-                for bot in self.bot:
-                    if bot.zid == z.id:                
-                        bot.drawLastKnownLoc(img)
-                        if self.ui.displayMode < 3 and bot.found:
-                            xmin = bot.locZonePx[0] - bot.scanDistance
-                            xmax = bot.locZonePx[0] + bot.scanDistance
-                            ymin = bot.locZonePx[1] - bot.scanDistance
-                            ymax = bot.locZonePx[1] + bot.scanDistance
+                # Last known card locations
+                for cid, c in self.cards.iteritems():
+                    if c.zid == z.id:                
+                        c.drawLastKnownLoc(img)
+                        if self.ui.displayMode < 3 and c.found:
+                            xmin = c.locZonePx[0] - c.scanDistance
+                            xmax = c.locZonePx[0] + c.scanDistance
+                            ymin = c.locZonePx[1] - c.scanDistance
+                            ymax = c.locZonePx[1] + c.scanDistance
                             drawBorder(img, [(xmin,ymax),(xmax,ymax),(xmax,ymin),(xmin,ymin)], self.ui.COLOR_LBLUE, 2)
-                            bot.drawOutput(img)   #draw the detection symbol
+                            c.drawOutput(img)   #draw the detection symbol
                         
                 if self.ui.displayAll():
                     outputImg[0:z.height, z.id*z.width:(z.id+1)*z.width] = img

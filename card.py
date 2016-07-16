@@ -14,6 +14,10 @@ class Card:
         self.symbol = None
         self.time = time.time() # time last found
         self.found = False
+
+        self.color_lastknown    = (255,0,0)         # Blue
+        self.color_detected     = (0,240,0)         # Green
+        self.color_roi          = (255, 200, 100)   # Light blue
         return
 
     
@@ -48,9 +52,6 @@ class Card:
     
 
     def drawOutput(self, outputImg):
-        x,y = self.ledPt
-        cv2.rectangle(outputImg, (x+5,y+5), (x-5,y-5), self.color_roi)
-        
         drawBorder(outputImg, self.symbol, self.color_detected, 2)
                      
         x,y = self.locZonePx
@@ -64,13 +65,13 @@ class Card:
         
 
     def drawLastKnownLoc(self, outputImg):
+        global Arena
         x,y = self.locZonePx
         if x == 0 and y == 0:
             return
-        if self.alive:
-            color = self.color_alive
-        else:
-            color = self.color_dead
+        
+        color = self.color_lastknown
+
         cv2.circle(outputImg, (x,y), 30, color, 2)
         cv2.putText(outputImg, str(self.id), (x-8, y+8), cv2.FONT_HERSHEY_PLAIN, 1.5, color, 2)
         ang = self.heading*(math.pi/180) #convert back to radians

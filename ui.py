@@ -98,9 +98,6 @@ class UI:
                         self.updateDisplay()
                     else:
                         self.updateDisplaySize()
-                    
-                elif self.menurows[rowClicked] == "numbots":
-                    Arena.updateNumBots()
                         
                 else:    
                     videoDevice_pattern = re.compile('^videoDevice(\d)$')
@@ -118,15 +115,6 @@ class UI:
                                 Arena.zone[zidx].closeV4l2ucp()
                             else:
                                 Arena.zone[zidx].openV4l2ucp()
-                        return
-                        
-                    botserial_pattern = re.compile('^botserial(\d)$')
-                    match = botserial_pattern.match(self.menurows[rowClicked])
-                    if match:
-                        bidx = int(match.group(1))
-                        Arena.bot[bidx].updateSerialDevice()
-                        return
-
         return
     
     def nextrow(self):
@@ -172,14 +160,13 @@ class UI:
         #Display Mode Labels
         output = "Mode: "      
         if self.displayMode == 0: #display source image
-            output += "Threshold"   
+            output += "Source"   
         elif self.displayMode == 1: #display source with data overlay
             output += "Overlay"
         elif self.displayMode == 2: #display only data overlay
             output += "Data Only"
-        elif self.displayMode == 3: #display the only the bots point of view
-            output += "Bot POV"
         cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
+
         #Draw FPS
         output = "FPS: "+str(self.fps)
         cv2.putText(controlPanelImg, output, (self.w-105,self.pt[1]), cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
@@ -188,40 +175,20 @@ class UI:
         
         self.menuSpacer()
         
-        #Game Status
-        output = "Game: On" if Arena.gameon else "Game: Off"
-        cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
-        self.menurows.append("gameon")
-        self.nextrow()
-        
-        self.menuSpacer()
-        
-        #Number of Bots
-        output = "Bots: " +str(Arena.numbots)
-        cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
-        self.menurows.append("numbots")
-        self.nextrow()
-            
-        #Draw Bot Statuses and Settings
-        for bot in Arena.bot:
-            output = str(bot.id)+":"
-            output += ' Z'+str(bot.zid)
-            output += ' '+str(bot.locArena)
-            output += ' '+str(bot.heading)
-            output += ' '+('A' if bot.alive else 'D')
-            output += ' '+str(int(round((time.time()-bot.time)*1000,0)))
+        # Draw card statuses and settings
+        for k, c in Arena.cards.iteritems():
+            output = str(c.id)+":"
+            output += ' Z'+str(c.zid)
+            output += ' '+str(c.locArena)
+            output += ' '+str(c.heading)
+            output += ' '+str(int(round((time.time()-c.time)*1000,0)))
             cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
-            self.menurows.append("bot"+str(bot.id))
+            self.menurows.append("card"+str(c.id))
             self.nextrow()
             
-            output = str(bot.serialdevname)
-            cv2.putText(controlPanelImg, output, (self.pt[0]+25,self.pt[1]), cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
-            self.menurows.append("botserial"+str(bot.id))
-            self.nextrow()
-        
         self.menuSpacer()
             
-        #Draw Zone POI statuses
+        # Draw Zone POI statuses
         for z in Arena.zone:
             for corner in z.corners:
                 output = "Z"+str(z.id)+" C"+str(corner.symbolvalue)+":"
@@ -232,7 +199,7 @@ class UI:
             
         self.menuSpacer()
         
-        #Draw Exit
+        # Draw Exit
         cv2.putText(controlPanelImg, "Exit", self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
         self.menurows.append("exit")
         self.nextrow()
@@ -240,7 +207,7 @@ class UI:
         return controlPanelImg
           
     def resize(self, img):        
-        #Resize output image
+        # Resize output image
         if size(img,1) > 0 and size(img,0) > 0 and 0 < self.displaySize < 100:
             r = float(self.displaySize)/100
             img = cv2.resize(img, (0,0), fx=r, fy=r)

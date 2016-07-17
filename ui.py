@@ -98,16 +98,14 @@ class UI:
                 elif self.menurows[rowClicked] == "displaymode":
                     self.updateDisplayMode()
 
-                elif self.menurows[rowClicked] == "recalibrate":
-                    Arena.recalibrate()
-
                 elif self.menurows[rowClicked] == "display":
                     if x <= 150:
                         self.updateDisplay()
                     else:
                         self.updateDisplaySize()
                 
-                else:    
+                else:
+                    # Video device    
                     match = self.videoDevicePattern.match(self.menurows[rowClicked])
                     if match:
                         zidx = int(match.group(1))
@@ -124,6 +122,7 @@ class UI:
                                 Arena.zones[zidx].openV4l2ucp()
                         return
 
+                    # Recalibrate zone
                     match = self.recalibratePattern.match(self.menurows[rowClicked])
                     if match:
                         zidx = int(match.group(1))

@@ -13,11 +13,15 @@ class Card:
         self.locZone = (0,0)
         self.locArena = (0,0)
         self.heading = 0
+        self.radians = 0
         self.symbol = None
+        self.symbolDimension = 10
+        self.gap = 1.3
+        self.dimensionPx = 0
         self.time = time.time() # time last found
         self.found = False
-
-        self.color_lastknown    = (255, 200, 100)   # Light Blue
+        
+        self.color_lastknown    = (0, 0, 255)       # Red
         self.color_detected     = (0,240,0)         # Green
         self.color_roi          = (255, 200, 100)   # Light blue
         return
@@ -47,14 +51,17 @@ class Card:
         #update the cards's heading
         x = self.symbol[3][0] - self.symbol[0][0]
         y = self.symbol[0][1] - self.symbol[3][1]
-        h = math.degrees(math.atan2(y,x))
+        self.radians = math.atan2(y,x)
+        h = math.degrees(self.radians)
         if h < 0: h = 360 + h
         self.heading = int(round(h,0))
+
+        self.dimensionPx = dist(self.symbol[0], self.symbol[3])
         return
     
 
     def drawOutput(self, outputImg):
-        drawBorder(outputImg, self.symbol, self.color_detected, 2)
+        drawBorder(outputImg, self.symbol, self.color_detected, 1)
                      
         x,y = self.locZonePx
         cv2.putText(outputImg, str(self.id), (x-8, y+8), cv2.FONT_HERSHEY_PLAIN, 1.5, self.color_detected, 2)
@@ -70,14 +77,26 @@ class Card:
         
         color = self.color_lastknown
 
-        # Draw the cards outline.        
+        # Draw the cards outline.
+        d = float(self.gap) / float(self.symbolDimension) * self.dimensionPx       
+        d = math.sqrt(d**2 + d**2)
+        ang = self.radians + (math.pi/4)
+        x,y = self.symbol[3]
+        pt3 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
+        
+        ang = self.radians - (math.pi/4)
+        x,y = self.symbol[2]
+        pt2 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
+        
+        ang = self.radians + (math.pi*3/4)
+        x,y = self.symbol[0]
+        pt0 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
+        
+        ang = self.radians - (math.pi*3/4)
+        x,y = self.symbol[1]
+        pt1 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
+        
+        drawBorder(outputImg, [pt0, pt1, pt2, pt3], color, 1)
 
-        cv2.circle(outputImg, (x,y), 30, color, 2)
-        cv2.putText(outputImg, str(self.id), (x-8, y+8), cv2.FONT_HERSHEY_PLAIN, 1.5, color, 2)
-        ang = self.heading*(math.pi/180) #convert back to radians
-        hl = 3.0    # Heading length
-        pt0 = ((x+int(math.cos(ang)*30)), (y-int(math.sin(ang)*30)))
-        pt1 = ((x+int(math.cos(ang)*30*hl)), (y-int(math.sin(ang)*30*hl)))
-        cv2.line(outputImg, pt0, pt1, color, 2)
         return       
         

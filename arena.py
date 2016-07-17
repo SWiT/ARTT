@@ -173,7 +173,7 @@ class Arena:
                 for c in z.corners:
                     corner_pts.append(c.location)
                     if c.found:
-                        drawBorder(img, c.symbol, self.ui.COLOR_BLUE, 2)
+                        drawBorder(img, c.symbol, self.ui.COLOR_BLUE, 1)
                         pt = (c.symbolcenter[0]-5, c.symbolcenter[1]+5)  
                         cv2.putText(img, str(c.symbolvalue), pt, cv2.FONT_HERSHEY_PLAIN, 1.5, self.ui.COLOR_BLUE, 2)
                 drawBorder(img, corner_pts, self.ui.COLOR_BLUE, 1)
@@ -183,12 +183,14 @@ class Arena:
                     if c.zid == z.id:                
                         c.drawLastKnownLoc(img)
                         if c.found:
+                            # Draw the scanning area
                             xmin = c.locZonePx[0] - c.scanDistance
                             xmax = c.locZonePx[0] + c.scanDistance
                             ymin = c.locZonePx[1] - c.scanDistance
                             ymax = c.locZonePx[1] + c.scanDistance
                             drawBorder(img, [(xmin,ymax),(xmax,ymax),(xmax,ymin),(xmin,ymin)], self.ui.COLOR_LBLUE, 2)
-                            c.drawOutput(img)   #draw the detection symbol
+                            
+                            c.drawOutput(img)   # Draw the symbols border
                         
                 if self.ui.displayAll():
                     outputImg[0:z.height, z.id*z.width:(z.id+1)*z.width] = img

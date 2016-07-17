@@ -56,7 +56,7 @@ while True:
 ###############
 ## END LOOP
 ###############
-for z in Arena.zone:
+for z in Arena.zones:
     z.close()
 cv2.destroyAllWindows()
 

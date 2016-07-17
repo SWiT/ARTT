@@ -25,6 +25,9 @@ class UI:
         self.fps = 0
         self.frametimes = []
 
+        self.videoDevicePattern = re.compile('^videoDevice(\d)$')
+        self.recalibratePattern = re.compile('^recalibrate(\d)$')
+
         self.exit = False
 
         # Display Modes
@@ -103,23 +106,29 @@ class UI:
                         self.updateDisplay()
                     else:
                         self.updateDisplaySize()
-                        
+                
                 else:    
-                    videoDevice_pattern = re.compile('^videoDevice(\d)$')
-                    match = videoDevice_pattern.match(self.menurows[rowClicked])
+                    match = self.videoDevicePattern.match(self.menurows[rowClicked])
                     if match:
                         zidx = int(match.group(1))
                         if x <= 28:
                             self.updateDisplay(zidx)
                         elif x <= 125:
-                            Arena.zone[zidx].updateVideoDevice()
+                            Arena.zones[zidx].updateVideoDevice()
                         elif x <= 275:
-                            Arena.zone[zidx].updateResolution()
+                            Arena.zones[zidx].updateResolution()
                         else:
-                            if Arena.zone[zidx].v4l2ucp != -1:
-                                Arena.zone[zidx].closeV4l2ucp()
+                            if Arena.zones[zidx].v4l2ucp != -1:
+                                Arena.zones[zidx].closeV4l2ucp()
                             else:
-                                Arena.zone[zidx].openV4l2ucp()
+                                Arena.zones[zidx].openV4l2ucp()
+                        return
+
+                    match = self.recalibratePattern.match(self.menurows[rowClicked])
+                    if match:
+                        zidx = int(match.group(1))
+                        Arena.zones[zidx].recalibrate()
+                        return
         return
     
     def nextrow(self):
@@ -193,22 +202,20 @@ class UI:
             
         self.menuSpacer()
         
-        # Draw the recalibrate button
-        output = "Recalibrate"
-        cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
-        self.menurows.append("recalibrate")
-        self.nextrow()
-
-        self.menuSpacer()
-
         # Draw zone corner statuses
         for z in Arena.zones:
-            for corner in z.corners:
-                output = "Z"+str(z.id)+" C"+str(corner.symbolvalue)+":"
-                output += ' '+str(int(round((time.time()-corner.time)*1000,0)))
+            for c in z.corners:
+                output = "Z"+str(z.id)+" C"+str(c.symbolvalue)+":"
+                #output += ' '+str(int(round((time.time()-c.time)*1000,0)))
+                output += ' ' + str(c.found)
                 cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
-                self.menurows.append("z"+str(z.id)+"c"+str(corner.idx))
+                self.menurows.append("z"+str(z.id)+"c"+str(c.idx))
                 self.nextrow()
+            # Draw the recalibrate button
+            output = "Recalibrate Z"+str(z.id)
+            cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
+            self.menurows.append("recalibrate"+str(z.id))
+            self.nextrow()
             
         self.menuSpacer()
         

@@ -16,9 +16,12 @@ class Zone:
         self.ri = 1          # Selected resolution Index
         
         self.image = None
-        self.width = 0;
-        self.height = 0;
-        self.roi = None
+        self.width = 0
+        self.height = 0
+        
+        self.warped = False        
+        self.M = None  # Perspective Transform
+
         self.projector = projector.Projector(570, 800)
         cv2.namedWindow("ZoneProjector"+str(idx))
 
@@ -61,7 +64,7 @@ class Zone:
             
         self.width = size(self.image, 1)
         self.height = size(self.image, 0)
-            
+        self.warped = False    
         return True
         
     
@@ -132,3 +135,22 @@ class Zone:
             corner.location = (-1, -1)
             corner.symbolcenter = (-1,-1)
         return
+
+    def warpImage(self):
+        # Prepare the transform if not done already.
+        if self.M is None:
+            pts1 = float32([self.corners[0].location, self.corners[1].location, self.corners[2].location, self.corners[3].location])
+            pts2 = float32([[0,0],[0,self.height],[self.width,self.height],[self.width,0]])
+            self.M = cv2.getPerspectiveTransform(pts1, pts2)
+
+        # Get the destination for the warp from the output image. 
+        # This is how transparency is done without alpha channel support.
+        warpedimage = zeros((self.height, self.width, 3), uint8)
+        dsize = (self.width, self.height)
+        cv2.warpPerspective(self.image, self.M, dsize, dst=warpedimage, borderMode=cv2.BORDER_TRANSPARENT)
+        self.image = warpedimage
+        self.warped = True
+        return
+
+
+

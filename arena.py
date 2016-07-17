@@ -90,7 +90,7 @@ class Arena:
             # If not calibrated, scan the full source image.
             if not z.calibrated():
                 # Set maxcount to 4 corners + the number of cards                 
-                self.dm.setMaxCount(len(self.cards) + 4 + 1)    
+                self.dm.setMaxCount(4 + len(self.cards))    
 
                 # Scan the whole image for DataMatrix
                 self.dm.scan(z.image)
@@ -123,6 +123,8 @@ class Arena:
                         continue;
             else:
                 # Zone is calibrated
+                # Warp the zone image to be rectangular.
+                z.warpImage()
                 continue;
 
         #End of zone loop

@@ -39,14 +39,6 @@ while True:
         # Display the projector
         cv2.imshow("ZoneProjector"+str(z.id), z.projector.outputimg)
     
-
-    # Warp the arena to be a Rectangle
-
-    # Translate the position from the camera to a position for the projector.
-
-    
-
-
     Arena.ui.calcFPS()
 
     #Exit

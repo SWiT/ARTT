@@ -47,12 +47,12 @@ class Arena:
   
     def targettedScan(self):
         # Get the latest image for the zone.
-        for z in self.zone:
+        for z in self.zones:
             z.getImage()
             
         for cid, c in self.cards.iteritems():
             c.scanDistance = int(dist(c.symbol[0], c.symbol[1]) * 1.5)
-            z = self.zone[c.zid]
+            z = self.zones[c.zid]
             xmin = c.locZonePx[0] - c.scanDistance
             xmax = c.locZonePx[0] + c.scanDistance
             ymin = c.locZonePx[1] - c.scanDistance
@@ -74,7 +74,7 @@ class Arena:
             for content,symbol in self.dm.symbols:
                match = self.cardPattern.match(content)
                if match:
-                   if int(match.group(1)) == c.id and size(self.zone) > c.zid:
+                   if int(match.group(1)) == c.id and size(self.zones) > c.zid:
                        c.setData(symbol, z)    #update the card's data
                        
             if not c.found:
@@ -134,7 +134,7 @@ class Arena:
         if self.ui.displayAll():
             widthAll = 0
             heightAll = 0
-            for z in self.zone:
+            for z in self.zones:
                 widthAll += z.width
                 heightAll = z.height
             outputImg = zeros((heightAll, widthAll, 3), uint8)

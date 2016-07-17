@@ -1,7 +1,7 @@
 import cv2, subprocess
 from numpy import *
 from utils import *
-import corner
+import corner, projector
 
 class Zone:
     used_vdi = []
@@ -16,10 +16,12 @@ class Zone:
         self.ri = 1          # Selected resolution Index
         
         self.image = None
-        self.roi = None
         self.width = 0;
         self.height = 0;
-    
+        self.roi = None
+        self.projector = projector.Projector(570, 800)
+        cv2.namedWindow("ZoneProjector"+str(idx))
+
         # Add the corners.        
         self.corners = []
         self.corners.append(corner.Corner(idx, 0))
@@ -105,6 +107,7 @@ class Zone:
     def close(self):
         self.closeV4l2ucp()
         self.closeCap()
+        cv2.destroyWindow("ZoneProjector"+str(self.id))
         try:
             self.used_vdi.remove(self.vdi)
         except ValueError:

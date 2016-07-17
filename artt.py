@@ -6,7 +6,6 @@ import arena, projector
 ###############
 ## SETUP
 ###############
-cv2.namedWindow("ArenaProjector")
 cv2.namedWindow("ArenaScanner")
 cv2.namedWindow("ArenaControlPanel")
 cv2.startWindowThread()
@@ -36,15 +35,16 @@ while True:
     controlPanelImg = Arena.ui.drawControlPanel(Arena)    
     cv2.imshow("ArenaControlPanel", controlPanelImg)
 
-
-    proj = projector.Projector(570, 800)
+    for z in Arena.zones:
+        # Display the projector
+        cv2.imshow("ZoneProjector"+str(z.id), z.projector.outputimg)
+    
 
     # Warp the arena to be a Rectangle
 
     # Translate the position from the camera to a position for the projector.
 
-    # Display the projector
-    cv2.imshow("ArenaProjector", proj.outputimg)
+    
 
 
     Arena.ui.calcFPS()

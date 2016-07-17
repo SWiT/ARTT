@@ -20,6 +20,8 @@ class Card:
         self.dimensionPx = 0
         self.time = time.time() # time last found
         self.found = False
+
+        self.actualSize = (2.5, 3.5)
         
         self.color_lastknown    = (0, 0, 255)       # Red
         self.color_detected     = (0,240,0)         # Green
@@ -78,24 +80,20 @@ class Card:
         color = self.color_lastknown
 
         # Draw the cards outline.
-        d = float(self.gap) / float(self.symbolDimension) * self.dimensionPx       
+        d = (float(self.gap) / float(self.symbolDimension) * self.dimensionPx) + (self.dimensionPx/2)
         d = math.sqrt(d**2 + d**2)
-        ang = self.radians + (math.pi/4)
-        x,y = self.symbol[3]
-        pt3 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
-        
-        ang = self.radians - (math.pi/4)
-        x,y = self.symbol[2]
-        pt2 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
-        
         ang = self.radians + (math.pi*3/4)
-        x,y = self.symbol[0]
         pt0 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
         
         ang = self.radians - (math.pi*3/4)
-        x,y = self.symbol[1]
         pt1 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
+                
+        ang = self.radians - (math.pi/4)
+        pt2 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
         
+        ang = self.radians + (math.pi/4)
+        pt3 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
+
         drawBorder(outputImg, [pt0, pt1, pt2, pt3], color, 1)
 
         return       

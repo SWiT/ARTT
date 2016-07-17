@@ -27,7 +27,7 @@ class Arena:
         self.buildZones()
         
         self.ui = ui.UI()
-        self.dm = dm.DM(1, 200)
+        self.dm = dm.DM(1, 300)
         return
         
     def updateNumberOfZones(self):

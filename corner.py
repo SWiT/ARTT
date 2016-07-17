@@ -11,7 +11,7 @@ class Corner:
         self.scanDistance = 0
         self.time = time.time()
         self.symboldimension = 10
-        self.gap = 1.25
+        self.gap = 2
         self.symbol = None
         self.found = False
         return

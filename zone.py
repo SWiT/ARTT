@@ -140,7 +140,7 @@ class Zone:
         # Prepare the transform if not done already.
         if self.M is None:
             pts1 = float32([self.corners[0].location, self.corners[1].location, self.corners[2].location, self.corners[3].location])
-            pts2 = float32([[0,0],[0,self.height],[self.width,self.height],[self.width,0]])
+            pts2 = float32([[0,self.height],[self.width,self.height],[self.width,0],[0,0]])
             self.M = cv2.getPerspectiveTransform(pts1, pts2)
 
         # Get the destination for the warp from the output image. 

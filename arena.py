@@ -41,16 +41,16 @@ class Arena:
         for z in self.zones:
             z.close()
             z.used_vdi = []
-        self.zone = []
+        self.zones = []
         for idx in range(0,self.numzones):
-            self.zone.append(zone.Zone(idx, self.videodevices))
+            self.zones.append(zone.Zone(idx, self.videodevices))
   
     def targettedScan(self):
         # Get the latest image for the zone.
         for z in self.zone:
             z.getImage()
             
-        for k, c in self.cards.iteritems():
+        for cid, c in self.cards.iteritems():
             c.scanDistance = int(dist(c.symbol[0], c.symbol[1]) * 1.5)
             z = self.zone[c.zid]
             xmin = c.locZonePx[0] - c.scanDistance
@@ -84,38 +84,46 @@ class Arena:
 
 
     def scan(self):
-        for z in self.zone:
+        for z in self.zones:
             z.getImage()
 
-            # Scan for DataMatrix
-            self.dm.scan(z.image)
+            # If not calibrated, scan the full source image.
+            if not z.calibrated():
+                # Set maxcount to 4 corners + the number of cards                 
+                self.dm.setMaxCount(len(self.cards) + 4 + 1)    
 
-            # For each detected DataMatrix symbol
-            for content,symbol in self.dm.symbols:
-                # Card Symbol
-                match = self.cardPattern.match(content)
-                if match:
-                    cardid = int(match.group(1))
-                    #don't update invalid card numbers.
-                    if cardid < card.idmin or card.idmax < cardid :
-                        print cardid,"invalid"
-                        continue
+                # Scan the whole image for DataMatrix
+                self.dm.scan(z.image)
 
-                    try:
-                        c = self.cards[cardid]
-                        
-                    except KeyError:
-                        c = card.Card(cardid)
-                        self.cards[cardid] = c
-                    c.setData(symbol, z)    #update the cards's data
-                    continue;
+                # For each detected DataMatrix symbol
+                for content,symbol in self.dm.symbols:
+                    # Card Symbol
+                    match = self.cardPattern.match(content)
+                    if match:
+                        cardid = int(match.group(1))
+                        #don't update invalid card numbers.
+                        if cardid < card.idmin or card.idmax < cardid :
+                            print cardid,"invalid"
+                            continue
 
-                # Zone Corner
-                match = self.cornerPattern.match(content)
-                if match:
-                    cid = int(match.group(1))
-                    z.corners[cid].setData(symbol)
-                    continue;
+                        try:
+                            c = self.cards[cardid]
+                        except KeyError:
+                            c = card.Card(cardid)
+                            self.cards[cardid] = c
+
+                        c.setData(symbol, z)    #update the cards's data
+                        continue;
+
+                    # Zone Corner
+                    match = self.cornerPattern.match(content)
+                    if match:
+                        cid = int(match.group(1))
+                        z.corners[cid].setData(symbol)
+                        continue;
+            else:
+                # Zone is calibrated
+                continue;
 
         #End of zone loop
         return
@@ -130,12 +138,12 @@ class Arena:
                 widthAll += z.width
                 heightAll = z.height
             outputImg = zeros((heightAll, widthAll, 3), uint8)
-        elif size(self.zone) > 0:
-            outputImg = zeros((self.zone[self.ui.display].height, self.zone[self.ui.display].width, 3), uint8)
+        elif size(self.zones) > 0:
+            outputImg = zeros((self.zones[self.ui.display].height, self.zones[self.ui.display].width, 3), uint8)
         else:
             outputImg = zeros((720, 1280, 3), uint8)
         
-        for z in self.zone:
+        for z in self.zones:
             if self.ui.isDisplayed(z.id):
                 # Prepare image based on display mode.
                 if self.ui.displayMode == self.ui.DATAONLY:

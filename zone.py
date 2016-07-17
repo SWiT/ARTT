@@ -30,12 +30,19 @@ class Zone:
         self.initVideoDevice()
         return
 
-    # All corners were found.
+    # The zone is calibrated if all corners are found.
     def calibrated(self):
         for c in self.corners:
             if not c.found:
                 return False
         return True
+
+
+    def recalibrate(self):
+        for c in self.corners:
+            c.found = False
+        return
+
 
     def getImage(self):
         #skip if capture is disabled

@@ -94,7 +94,10 @@ class UI:
                     
                 elif self.menurows[rowClicked] == "displaymode":
                     self.updateDisplayMode()
-                    
+
+                elif self.menurows[rowClicked] == "recalibrate":
+                    Arena.recalibrate()
+
                 elif self.menurows[rowClicked] == "display":
                     if x <= 150:
                         self.updateDisplay()
@@ -136,7 +139,7 @@ class UI:
         cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
         self.menurows.append("zones")
         self.nextrow()
-        for z in Arena.zone:
+        for z in Arena.zones:
             output = str(z.id)+": "
             cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
             output = z.videodevices[z.vdi][5:] if z.vdi > -1 else "Off"
@@ -189,9 +192,17 @@ class UI:
             self.nextrow()
             
         self.menuSpacer()
-            
+        
+        # Draw the recalibrate button
+        output = "Recalibrate"
+        cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
+        self.menurows.append("recalibrate")
+        self.nextrow()
+
+        self.menuSpacer()
+
         # Draw zone corner statuses
-        for z in Arena.zone:
+        for z in Arena.zones:
             for corner in z.corners:
                 output = "Z"+str(z.id)+" C"+str(corner.symbolvalue)+":"
                 output += ' '+str(int(round((time.time()-corner.time)*1000,0)))

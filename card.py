@@ -17,7 +17,7 @@ class Card:
         self.time = time.time() # time last found
         self.found = False
 
-        self.color_lastknown    = (255,0,0)         # Blue
+        self.color_lastknown    = (255, 200, 100)   # Light Blue
         self.color_detected     = (0,240,0)         # Green
         self.color_roi          = (255, 200, 100)   # Light blue
         return
@@ -59,10 +59,6 @@ class Card:
         x,y = self.locZonePx
         cv2.putText(outputImg, str(self.id), (x-8, y+8), cv2.FONT_HERSHEY_PLAIN, 1.5, self.color_detected, 2)
         
-        ptdiff = findDiffs(self.symbol[1], self.symbol[2])
-        pt0 = findCenter([self.symbol[2], self.symbol[3]])
-        pt1 = (pt0[0]+int(ptdiff[0]*1.20), pt0[1]+int(ptdiff[1]*1.20))
-        cv2.line(outputImg, pt0, pt1, self.color_detected, 2)
         return
         
 
@@ -74,11 +70,14 @@ class Card:
         
         color = self.color_lastknown
 
+        # Draw the cards outline.        
+
         cv2.circle(outputImg, (x,y), 30, color, 2)
         cv2.putText(outputImg, str(self.id), (x-8, y+8), cv2.FONT_HERSHEY_PLAIN, 1.5, color, 2)
         ang = self.heading*(math.pi/180) #convert back to radians
+        hl = 3.0    # Heading length
         pt0 = ((x+int(math.cos(ang)*30)), (y-int(math.sin(ang)*30)))
-        pt1 = ((x+int(math.cos(ang)*30*3.25)), (y-int(math.sin(ang)*30*3.25)))
+        pt1 = ((x+int(math.cos(ang)*30*hl)), (y-int(math.sin(ang)*30*hl)))
         cv2.line(outputImg, pt0, pt1, color, 2)
         return       
         

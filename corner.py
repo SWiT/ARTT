@@ -11,7 +11,7 @@ class Corner:
         self.scanDistance = 0
         self.time = time.time()
         self.symboldimension = 10
-        self.gap = 1
+        self.gap = 1.3
         self.symbol = None
         self.found = False
         return
@@ -25,7 +25,7 @@ class Corner:
         offset_x_sign = 1 if (self.idx%3 != 0) else -1
         offset_y_sign = 1 if (self.idx < 2) else -1
         
-        self.location = (self.location[0] + offset_x_sign * offset, self.location[1] + offset_y_sign * offset)
+        self.location = (self.location[0] + (offset_x_sign * offset), self.location[1] + (offset_y_sign * offset))
         self.time = time.time()
         self.found = found
         return

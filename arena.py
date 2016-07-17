@@ -170,24 +170,19 @@ class Arena:
                 
                 # Zone edges
                 corner_pts = []
-                for corner in z.corners:
-                    corner_pts.append(corner.location)
-                    if self.ui.displayMode < 3 and corner.found:
-                        xmin = corner.symbolcenter[0] - corner.scanDistance
-                        xmax = corner.symbolcenter[0] + corner.scanDistance
-                        ymin = corner.symbolcenter[1] - corner.scanDistance
-                        ymax = corner.symbolcenter[1] + corner.scanDistance
-                        drawBorder(img, [(xmin,ymax),(xmax,ymax),(xmax,ymin),(xmin,ymin)], self.ui.COLOR_LBLUE, 2)
-                        drawBorder(img, corner.symbol, self.ui.COLOR_BLUE, 2)
-                        pt = (corner.symbolcenter[0]-5, corner.symbolcenter[1]+5)  
-                        cv2.putText(img, str(corner.symbolvalue), pt, cv2.FONT_HERSHEY_PLAIN, 1.5, self.ui.COLOR_BLUE, 2)
-                drawBorder(img, corner_pts, self.ui.COLOR_BLUE, 2)
+                for c in z.corners:
+                    corner_pts.append(c.location)
+                    if c.found:
+                        drawBorder(img, c.symbol, self.ui.COLOR_BLUE, 2)
+                        pt = (c.symbolcenter[0]-5, c.symbolcenter[1]+5)  
+                        cv2.putText(img, str(c.symbolvalue), pt, cv2.FONT_HERSHEY_PLAIN, 1.5, self.ui.COLOR_BLUE, 2)
+                drawBorder(img, corner_pts, self.ui.COLOR_BLUE, 1)
                 
                 # Last known card locations
                 for cid, c in self.cards.iteritems():
                     if c.zid == z.id:                
                         c.drawLastKnownLoc(img)
-                        if self.ui.displayMode < 3 and c.found:
+                        if c.found:
                             xmin = c.locZonePx[0] - c.scanDistance
                             xmax = c.locZonePx[0] + c.scanDistance
                             ymin = c.locZonePx[1] - c.scanDistance

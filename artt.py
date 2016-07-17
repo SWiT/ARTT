@@ -6,8 +6,8 @@ import arena, projector
 ###############
 ## SETUP
 ###############
-cv2.namedWindow("ArenaScanner")
 cv2.namedWindow("ArenaProjector")
+cv2.namedWindow("ArenaScanner")
 cv2.namedWindow("ArenaControlPanel")
 cv2.startWindowThread()
 

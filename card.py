@@ -17,7 +17,7 @@ class Card:
         self.symbol = None
         self.symbolDimension = 2.0
         self.gap = 0.25
-        self.dimensionPx = 0
+        self.symbolDimensionPx = 0
         self.time = time.time() # time last found
         self.found = False
 
@@ -36,7 +36,7 @@ class Card:
         self.zid = z.id
 
         self.found = found
-
+        
         #update the card's location
         self.locZonePx = findCenter(self.symbol)
         wallCenterX = findCenter([z.corners[1].location, z.corners[0].location])
@@ -58,7 +58,7 @@ class Card:
         if h < 0: h = 360 + h
         self.heading = int(round(h,0))
 
-        self.dimensionPx = dist(self.symbol[0], self.symbol[3])
+        self.symbolDimensionPx = dist(self.symbol[0], self.symbol[3])
         return
     
 
@@ -80,8 +80,8 @@ class Card:
         color = self.color_lastknown
 
         # Draw the cards outline.
-        op = (float(self.gap) * self.dimensionPx / float(self.symbolDimension) ) + (self.dimensionPx/2)
-        adj = op + (1.0 * self.dimensionPx / float(self.symbolDimension))
+        op = (float(self.gap) * self.symbolDimensionPx / float(self.symbolDimension) ) + (self.symbolDimensionPx/2)
+        adj = op + (1.0 * self.symbolDimensionPx / float(self.symbolDimension))
         d = math.sqrt(op**2 + adj**2)
 
         ang = self.radians + (math.pi-math.atan2(op,adj))

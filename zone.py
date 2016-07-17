@@ -46,6 +46,7 @@ class Zone:
     def recalibrate(self):
         for c in self.corners:
             c.found = False
+        self.M = None
         return
 
 

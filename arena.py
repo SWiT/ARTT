@@ -88,15 +88,21 @@ class Arena:
             z.getImage()
 
             # If not calibrated, scan the full source image.
-            if not z.calibrated():
-                # Set maxcount to 4 corners + the number of cards                 
-                self.dm.setMaxCount(4 + len(self.cards))    
+            if z.calibrated():
+                # Zone is calibrated
+                # Warp the zone image to be rectangular.
+                z.warpImage()
+                
 
-                # Scan the whole image for DataMatrix
-                self.dm.scan(z.image)
+            # Set maxcount to 4 corners + the number of cards                 
+            self.dm.setMaxCount(4 + len(self.cards))    
 
-                # For each detected DataMatrix symbol
-                for content,symbol in self.dm.symbols:
+            # Scan the whole image for DataMatrix
+            self.dm.scan(z.image)
+
+            # For each detected DataMatrix symbol
+            for content,symbol in self.dm.symbols:
+                if z.warped:                
                     # Card Symbol
                     match = self.cardPattern.match(content)
                     if match:
@@ -114,18 +120,14 @@ class Arena:
 
                         c.setData(symbol, z)    #update the cards's data
                         continue;
-
+                else:
                     # Zone Corner
                     match = self.cornerPattern.match(content)
                     if match:
                         cid = int(match.group(1))
                         z.corners[cid].setData(symbol)
                         continue;
-            else:
-                # Zone is calibrated
-                # Warp the zone image to be rectangular.
-                z.warpImage()
-                continue;
+            
 
         #End of zone loop
         return
@@ -171,14 +173,15 @@ class Arena:
                 cv2.line(img, pt0, pt1, self.ui.COLOR_PURPLE, 1)
                 
                 # Zone edges
-                corner_pts = []
-                for c in z.corners:
-                    corner_pts.append(c.location)
-                    if c.found:
-                        drawBorder(img, c.symbol, self.ui.COLOR_BLUE, 1)
-                        pt = (c.symbolcenter[0]-5, c.symbolcenter[1]+5)  
-                        cv2.putText(img, str(c.symbolvalue), pt, cv2.FONT_HERSHEY_PLAIN, 1.5, self.ui.COLOR_BLUE, 2)
-                drawBorder(img, corner_pts, self.ui.COLOR_BLUE, 1)
+                if not z.calibrated():                
+                    corner_pts = []
+                    for c in z.corners:
+                        corner_pts.append(c.location)
+                        if c.found:
+                            drawBorder(img, c.symbol, self.ui.COLOR_BLUE, 1)
+                            pt = (c.symbolcenter[0]-5, c.symbolcenter[1]+5)  
+                            cv2.putText(img, str(c.symbolvalue), pt, cv2.FONT_HERSHEY_PLAIN, 1.5, self.ui.COLOR_BLUE, 2)
+                    drawBorder(img, corner_pts, self.ui.COLOR_BLUE, 1)
                 
                 # Last known card locations
                 for cid, c in self.cards.iteritems():

@@ -190,7 +190,7 @@ class Arena:
                             ymax = c.locZonePx[1] + c.scanDistance
                             drawBorder(img, [(xmin,ymax),(xmax,ymax),(xmax,ymin),(xmin,ymin)], self.ui.COLOR_LBLUE, 2)
                             
-                            c.drawOutput(img)   # Draw the symbols border
+                            c.drawDetected(img)   # Draw a border on the symbol.
                         
                 if self.ui.displayAll():
                     outputImg[0:z.height, z.id*z.width:(z.id+1)*z.width] = img

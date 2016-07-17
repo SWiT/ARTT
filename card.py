@@ -15,13 +15,13 @@ class Card:
         self.heading = 0
         self.radians = 0
         self.symbol = None
-        self.symbolDimension = 10
-        self.gap = 1.3
+        self.symbolDimension = 2.0
+        self.gap = 0.25
         self.dimensionPx = 0
         self.time = time.time() # time last found
         self.found = False
 
-        self.actualSize = (2.5, 3.5)
+        self.dimensions = (2.5, 3.5)
         
         self.color_lastknown    = (0, 0, 255)       # Red
         self.color_detected     = (0,240,0)         # Green
@@ -62,7 +62,7 @@ class Card:
         return
     
 
-    def drawOutput(self, outputImg):
+    def drawDetected(self, outputImg):
         drawBorder(outputImg, self.symbol, self.color_detected, 1)
                      
         x,y = self.locZonePx
@@ -80,14 +80,18 @@ class Card:
         color = self.color_lastknown
 
         # Draw the cards outline.
-        d = (float(self.gap) / float(self.symbolDimension) * self.dimensionPx) + (self.dimensionPx/2)
-        d = math.sqrt(d**2 + d**2)
-        ang = self.radians + (math.pi*3/4)
+        op = (float(self.gap) * self.dimensionPx / float(self.symbolDimension) ) + (self.dimensionPx/2)
+        adj = op + (1.0 * self.dimensionPx / float(self.symbolDimension))
+        d = math.sqrt(op**2 + adj**2)
+
+        ang = self.radians + (math.pi-math.atan2(op,adj))
         pt0 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
         
-        ang = self.radians - (math.pi*3/4)
+        ang = self.radians - (math.pi-math.atan2(y,x))
         pt1 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
-                
+        
+        d = math.sqrt(op**2 + op**2)
+        
         ang = self.radians - (math.pi/4)
         pt2 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
         

@@ -50,6 +50,7 @@ class Zone:
         for c in self.corners:
             c.found = False
         self.M = None
+        self.projector.outputCalibrationImage()
         return
 
 

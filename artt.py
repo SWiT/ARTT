@@ -2,7 +2,7 @@ import cv2
 from numpy import *
 
 import arena, projector
-   
+
 ###############
 ## SETUP
 ###############
@@ -24,27 +24,27 @@ while True:
     Arena.scan()
 
     # Render the output of the arena.
-    outputImg = Arena.render() 
-    
+    outputimg = Arena.render()
+
     # Display the image or frame of video
-    if size(outputImg,0) > 0 and size(outputImg,1) > 0:
-        outputImg = Arena.ui.resize(outputImg)
-        cv2.imshow("ArenaScanner", outputImg)
-    
+    if size(outputimg,0) > 0 and size(outputimg,1) > 0:
+        outputimg = Arena.ui.resize(outputimg)
+        cv2.imshow("ArenaScanner", outputimg)
+
     # Display the control panel
-    controlPanelImg = Arena.ui.drawControlPanel(Arena)    
+    controlPanelImg = Arena.ui.drawControlPanel(Arena)
     cv2.imshow("ArenaControlPanel", controlPanelImg)
 
     for z in Arena.zones:
         # Display the projector
         cv2.imshow("ZoneProjector"+str(z.id), z.projector.outputimg)
-    
+
     Arena.ui.calcFPS()
 
     #Exit
-    if Arena.ui.exit: 
+    if Arena.ui.exit:
         break
-      
+
 ###############
 ## END LOOP
 ###############

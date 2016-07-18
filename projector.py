@@ -1,17 +1,45 @@
 import cv2
 from numpy import *
+from utils import *
 
 class Projector:
 
     def __init__(self, height, width):
         self.width = width
         self.height = height
+        self.outputimg  = None
+        self.baseimg    = None
+        self.outputtype = None
+        self.outputCalibrationImage()
+        return
+
+
+    def outputArenaImage(self):
+        if self.outputtype != "arena":
+            # Create a empty white image.
+            self.baseimg = zeros((self.height,self.width,3), uint8)
+            self.baseimg[:,:] = (255,255,255)
+
+            # Draw the arena border
+            offset = 2
+            border = [(offset, self.height-offset)
+                     ,(self.width-offset, self.height-offset)
+                     ,(self.width-offset, offset)
+                     ,(offset, offset)
+                     ]
+            drawBorder(self.baseimg, border, (0,240,0), 3)
+            #cv2.line(self.baseimg, pt0, pt1, color, thickness)
+
+            self.outputtype = "arena"
+        self.outputimg = self.baseimg
+        return
+
+
+    def outputCalibrationImage(self):
         #TODO: generate Corner symbols on the fly based on a size value.
-        filename = "images/arena_" + str(self.width) + "_" + str(self.height) + ".png"
-        self.baseimg = cv2.imread(filename)
-        if self.baseimg == None:
+        if self.outputtype != "calibrate":
             # Base arena file not found.
-            # Create a empty gray image.
+            # Create a empty white image.
             self.baseimg = zeros((self.height,self.width,3), uint8)
             self.baseimg[:,:] = (255,255,255)
 
@@ -38,8 +66,7 @@ class Projector:
             xoffset = 0
             self.baseimg[yoffset:(ch+yoffset),xoffset:(cw+xoffset)] = corner
 
-            # Save base arena as an image file, for later use.
-            cv2.imwrite(filename, self.baseimg)
+            self.outputtype = "calibrate"
 
         self.outputimg = self.baseimg
         return

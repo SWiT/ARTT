@@ -143,20 +143,8 @@ class Zone:
     def warpImage(self):
         # Prepare the transform if not done already.
         if self.M is None:
-            # Calculate optimal warp dimensions. The smallest rectangle with minimal stretching.
-            # Check which segment is the longest in pixels with respect to the projecter image ratio.
-            ratio = float32(self.projector.width)/float32(self.projector.height)
-            seg =   [dist(self.corners[0].location, self.corners[1].location)
-                    ,dist(self.corners[1].location, self.corners[2].location)*ratio
-                    ,dist(self.corners[2].location, self.corners[3].location)
-                    ,dist(self.corners[3].location, self.corners[0].location)*ratio
-                    ]
-            self.warpwidth   = int(max(seg))
-            self.warpheight  = int(self.warpwidth / ratio)
-
-            if self.warpwidth > self.projector.width or self.warpheight > self.projector.height:
-                self.warpwidth = self.projector.width
-                self.warpheight = self.projector.height
+            self.warpwidth = self.projector.width
+            self.warpheight = self.projector.height
 
             pts1 = float32([self.corners[0].location, self.corners[1].location, self.corners[2].location, self.corners[3].location])
             pts2 = float32([[0,self.warpheight],[self.warpwidth,self.warpheight],[self.warpwidth,0],[0,0]])

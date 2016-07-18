@@ -9,29 +9,32 @@ class Zone:
         self.id = idx   # Zone ID
         self.vdi = idx  # Video ID
         self.videodevices = videodevices    # list of video devices
-        self.gridsize = (25, 18) # Grid size to apply to the zone. (inches or cm)
+        self.gridsize = (25, 18) # Grid size to apply to the zone.
         self.v4l2ucp = -1   # Flag for v4l2ucp sub process
         self.cap = -1        # Capture device object (OpenCV)
         self.resolutions = [(640,480),(1280,720),(1920,1080)]
         self.ri = 1          # Selected resolution Index
-        
+
         self.image = None
         self.width = 0
         self.height = 0
-        
-        self.warped = False        
+        self.depth = 0
+
+        self.warped = False
         self.M = None  # Perspective Transform
+        self.warpwidth = 0
+        self.warpheight = 0
 
         self.projector = projector.Projector(570, 800)
         cv2.namedWindow("ZoneProjector"+str(idx))
 
-        # Add the corners.        
+        # Add the corners.
         self.corners = []
         self.corners.append(corner.Corner(idx, 0))
         self.corners.append(corner.Corner(idx, 1))
         self.corners.append(corner.Corner(idx, 2))
         self.corners.append(corner.Corner(idx, 3))
-        
+
         self.initVideoDevice()
         return
 
@@ -54,7 +57,7 @@ class Zone:
         #skip if capture is disabled
         if self.cap == -1:
             return False
-            
+
         #get the next frame from the zones capture device
         success, self.image = self.cap.read()
         if not success:
@@ -62,13 +65,13 @@ class Zone:
             global ui
             ui.exit = True
             return False
-            
-        self.width = size(self.image, 1)
-        self.height = size(self.image, 0)
-        self.warped = False    
+
+        self.height,self.width,self.depth = self.image.shape
+
+        self.warped = False
         return True
-        
-    
+
+
     def nextAvailableDevice(self):
         self.vdi += 1
         if self.vdi >= len(self.videodevices):
@@ -80,16 +83,16 @@ class Zone:
                 return
             self.nextAvailableDevice()
         return
-        
+
     def updateVideoDevice(self):
         self.close()
         self.nextAvailableDevice()
         if self.vdi > -1:
             self.initVideoDevice()
         else:
-            self.close()    
+            self.close()
         return
-        
+
     def openV4l2ucp(self):
         self.v4l2ucp = subprocess.Popen(['v4l2ucp',self.videodevices[self.vdi]])
         return
@@ -99,15 +102,15 @@ class Zone:
             self.v4l2ucp.kill()
             self.v4l2ucp = -1
         return
-             
+
     def initVideoDevice(self):
         if self.vdi != -1:
             self.cap = cv2.VideoCapture(self.vdi)
             self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, self.resolutions[self.ri][0])
             self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, self.resolutions[self.ri][1])
-            self.used_vdi.append(self.vdi)          
+            self.used_vdi.append(self.vdi)
         return
-        
+
     def close(self):
         self.closeV4l2ucp()
         self.closeCap()
@@ -117,13 +120,13 @@ class Zone:
         except ValueError:
             pass
         return
-    
+
     def closeCap(self):
-        if self.cap != -1: 
+        if self.cap != -1:
             self.cap.release()
             self.cap = -1
         return
-        
+
     def updateResolution(self):
         self.ri += 1
         if self.ri >= len(self.resolutions):
@@ -140,16 +143,31 @@ class Zone:
     def warpImage(self):
         # Prepare the transform if not done already.
         if self.M is None:
+            # Calculate optimal warp dimensions. The smallest rectangle with minimal stretching.
+            # Check which segment is the longest in pixels with respect to the projecter image ratio.
+            ratio = float32(self.projector.width)/float32(self.projector.height)
+            seg =   [dist(self.corners[0].location, self.corners[1].location)
+                    ,dist(self.corners[1].location, self.corners[2].location)*ratio
+                    ,dist(self.corners[2].location, self.corners[3].location)
+                    ,dist(self.corners[3].location, self.corners[0].location)*ratio
+                    ]
+            self.warpwidth   = int(max(seg))
+            self.warpheight  = int(self.warpwidth / ratio)
+
+            if self.warpwidth > self.projector.width or self.warpheight > self.projector.height:
+                self.warpwidth = self.projector.width
+                self.warpheight = self.projector.height
+
             pts1 = float32([self.corners[0].location, self.corners[1].location, self.corners[2].location, self.corners[3].location])
-            pts2 = float32([[0,self.height],[self.width,self.height],[self.width,0],[0,0]])
+            pts2 = float32([[0,self.warpheight],[self.warpwidth,self.warpheight],[self.warpwidth,0],[0,0]])
             self.M = cv2.getPerspectiveTransform(pts1, pts2)
 
-        # Get the destination for the warp from the output image. 
-        # This is how transparency is done without alpha channel support.
-        warpedimage = zeros((self.height, self.width, 3), uint8)
-        dsize = (self.width, self.height)
+        # Warp the image to be the optimal size
+        warpedimage = zeros((self.warpheight, self.warpwidth, 3), uint8)
+        dsize = (self.warpwidth, self.warpheight)
         cv2.warpPerspective(self.image, self.M, dsize, dst=warpedimage, borderMode=cv2.BORDER_TRANSPARENT)
         self.image = warpedimage
+        self.height,self.width,self.depth = self.image.shape
         self.warped = True
         return
 

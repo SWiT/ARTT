@@ -1,7 +1,7 @@
 import time, math, re, os
 from utils import *
 
-idmin   = 0 
+idmin   = 0
 idmax   = 53
 
 class Card:
@@ -22,13 +22,13 @@ class Card:
         self.found = False
 
         self.dimensions = (2.5, 3.5)
-        
+
         self.color_lastknown    = (0, 0, 255)       # Red
         self.color_detected     = (0,240,0)         # Green
         self.color_roi          = (255, 200, 100)   # Light blue
         return
 
-    
+
     def setData(self, symbol, z, found = True):
         global Arena
         self.time = time.time()
@@ -36,7 +36,7 @@ class Card:
         self.zid = z.id
 
         self.found = found
-        
+
         #update the card's location
         self.locZonePx = findCenter(self.symbol)
         wallCenterX = findCenter([z.corners[1].location, z.corners[0].location])
@@ -49,7 +49,7 @@ class Card:
             self.locZone = (zoneX, zoneY)
             # Set Arena location, only side by side currently supported.
             self.locArena = (self.locZone[0] + (z.gridsize[0] * z.id), self.locZone[1])
-            
+
         #update the cards's heading
         x = self.symbol[3][0] - self.symbol[0][0]
         y = self.symbol[0][1] - self.symbol[3][1]
@@ -60,23 +60,23 @@ class Card:
 
         self.symbolDimensionPx = dist(self.symbol[0], self.symbol[3])
         return
-    
+
 
     def drawDetected(self, outputImg):
         drawBorder(outputImg, self.symbol, self.color_detected, 1)
-                     
+
         x,y = self.locZonePx
         cv2.putText(outputImg, str(self.id), (x-8, y+8), cv2.FONT_HERSHEY_PLAIN, 1.5, self.color_detected, 2)
-        
+
         return
-        
+
 
     def drawLastKnownLoc(self, outputImg):
         global Arena
         x,y = self.locZonePx
         if x == 0 and y == 0:
             return
-        
+
         color = self.color_lastknown
 
         # Draw the cards outline.
@@ -86,19 +86,19 @@ class Card:
 
         ang = self.radians + (math.pi-math.atan2(op,adj))
         pt0 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
-        
+
         ang = self.radians - (math.pi-math.atan2(y,x))
         pt1 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
-        
+
         d = math.sqrt(op**2 + op**2)
-        
+
         ang = self.radians - (math.pi/4)
         pt2 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
-        
+
         ang = self.radians + (math.pi/4)
         pt3 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
 
         drawBorder(outputImg, [pt0, pt1, pt2, pt3], color, 1)
 
-        return       
-        
+        return
+

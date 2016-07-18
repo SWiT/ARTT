@@ -14,7 +14,7 @@ class UI:
         self.h = 640 #control panel height
         self.w = 350 #control panel width
         self.lh = 20 #control panel line height
-        self.pt = (0,self.lh) #control panel current text output position    
+        self.pt = (0,self.lh) #control panel current text output position
         self.menurows = []
         self.display = 0
         self.displaySize = 50
@@ -32,22 +32,22 @@ class UI:
 
         # Display Modes
         self.SOURCE      = 0
-        self.OVERLAY     = 1    
+        self.OVERLAY     = 1
         self.DATAONLY    = 2
         return
-    
+
     def isDisplayed(self,idx):
         return self.display == idx or self.display == -1
-        
+
     def displayAll(self):
         return self.display == -1
-        
+
     def updateDisplayMode(self):
         self.displayMode += 1
         if self.displayMode > 2:
             self.displayMode = 0
         return
-    
+
     def updateDisplay(self,v = None):
         if v is not None:
             self.display = v
@@ -57,18 +57,18 @@ class UI:
             if self.display >= self.numzones:
                 self.display = -1
         return
-    
+
     def updateDisplaySize(self):
         self.displaySize += 10
         if self.displaySize > 100:
             self.displaySize = 50
         return
-        
+
     def menuSpacer(self):
         self.menurows.append("space")
         self.pt = (self.pt[0],self.pt[1]+self.lh)
         return
-    
+
     #Calculate FPS
     def calcFPS(self):
         now = time.time()
@@ -76,12 +76,12 @@ class UI:
         self.frametimes.append(timediff)
         if len(self.frametimes) > 30:
             self.frametimes = self.frametimes[1:]
- 
+
         self.fps = int(len(self.frametimes)/sum(self.frametimes))
-       
+
         self.frametime = now
         return
-    
+
     def onMouse(self,event,x,y,flags,param):
         #print "Mouse:",event,x,y,flags
         if event == cv2.EVENT_LBUTTONUP:
@@ -91,10 +91,10 @@ class UI:
                 if self.menurows[rowClicked] == "zones":
                     self.numzones = Arena.updateNumberOfZones()
                     self.updateDisplay(-1)
-                    
+
                 elif self.menurows[rowClicked] == "exit":
                     self.exit = True
-                    
+
                 elif self.menurows[rowClicked] == "displaymode":
                     self.updateDisplayMode()
 
@@ -103,9 +103,9 @@ class UI:
                         self.updateDisplay()
                     else:
                         self.updateDisplaySize()
-                
+
                 else:
-                    # Video device    
+                    # Video device
                     match = self.videoDevicePattern.match(self.menurows[rowClicked])
                     if match:
                         zidx = int(match.group(1))
@@ -129,11 +129,11 @@ class UI:
                         Arena.zones[zidx].recalibrate()
                         return
         return
-    
+
     def nextrow(self):
         self.pt = (self.pt[0],self.pt[1]+self.lh)
         return
-        
+
     def drawControlPanel(self, Arena):
         #Draw Control Panel
         self.pt = (0,self.lh)
@@ -141,7 +141,7 @@ class UI:
         controlPanelImg = zeros((self.h,self.w,3), uint8) #create a blank image for the control panel
         menutextcolor = (255,255,255)
         self.menurows = []
-            
+
         #Display Zones, video devices, and resolutions
         output = "Zones: "+str(Arena.numzones)
         cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
@@ -158,9 +158,13 @@ class UI:
             cv2.putText(controlPanelImg, output, (self.pt[0]+270,self.pt[1]-2), cv2.FONT_HERSHEY_PLAIN, 1.0, menutextcolor, 1)
             self.menurows.append("videoDevice"+str(z.id))
             self.nextrow()
-        
+            output = " "+str(z.width)+"x"+str(z.height)
+            cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
+            self.menurows.append("calibartedres"+str(z.id))
+            self.nextrow()
+
         self.menuSpacer()
-            
+
         #Display
         output = "Display: "+str(self.display) if self.display>-1 else "Display: All"
         cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
@@ -169,9 +173,9 @@ class UI:
         cv2.putText(controlPanelImg, output, (self.pt[0]+150,self.pt[1]), cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
         self.menurows.append("display")
         self.nextrow()
-        
+
         #Display Mode Labels
-        output = "Mode: "      
+        output = "Mode: "
         if self.displayMode == self.SOURCE:   # Display source image
             output += "Source"
         elif self.displayMode == self.OVERLAY: # Display source with data overlay
@@ -185,9 +189,9 @@ class UI:
         cv2.putText(controlPanelImg, output, (self.w-105,self.pt[1]), cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
         self.menurows.append("displaymode")
         self.nextrow()
-        
+
         self.menuSpacer()
-        
+
         # Draw card statuses and settings
         for k, c in Arena.cards.iteritems():
             output = str(c.id)+":"
@@ -198,9 +202,9 @@ class UI:
             cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
             self.menurows.append("card"+str(c.id))
             self.nextrow()
-            
+
         self.menuSpacer()
-        
+
         # Draw zone corner statuses
         for z in Arena.zones:
             for c in z.corners:
@@ -215,17 +219,17 @@ class UI:
             cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
             self.menurows.append("recalibrate"+str(z.id))
             self.nextrow()
-            
+
         self.menuSpacer()
-        
+
         # Draw Exit
         cv2.putText(controlPanelImg, "Exit", self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
         self.menurows.append("exit")
         self.nextrow()
-        
+
         return controlPanelImg
-          
-    def resize(self, img):        
+
+    def resize(self, img):
         # Resize output image
         if size(img,1) > 0 and size(img,0) > 0 and 0 < self.displaySize < 100:
             r = float(self.displaySize)/100

@@ -31,7 +31,7 @@ class Projector:
             #cv2.line(self.baseimg, pt0, pt1, color, thickness)
 
             self.outputtype = "arena"
-        self.outputimg = self.baseimg
+        self.outputimg = self.baseimg.copy()
         return
 
 
@@ -68,5 +68,5 @@ class Projector:
 
             self.outputtype = "calibrate"
 
-        self.outputimg = self.baseimg
+        self.outputimg = self.baseimg.copy()
         return

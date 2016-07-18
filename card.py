@@ -87,7 +87,7 @@ class Card:
         ang = self.radians + (math.pi-math.atan2(op,adj))
         pt0 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
 
-        ang = self.radians - (math.pi-math.atan2(y,x))
+        ang = self.radians - (math.pi-math.atan2(op,adj))
         pt1 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
 
         d = math.sqrt(op**2 + op**2)

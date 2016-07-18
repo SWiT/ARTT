@@ -17,7 +17,7 @@ class UI:
         self.pt = (0,self.lh) #control panel current text output position
         self.menurows = []
         self.display = 0
-        self.displaySize = 50
+        self.displaySize = 100
         self.displayMode = 1
         self.numzones = 1
 

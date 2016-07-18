@@ -13,7 +13,7 @@ class Projector:
             # Base arena file not found.
             # Create a empty gray image.
             self.baseimg = zeros((self.height,self.width,3), uint8)
-            self.baseimg[:,:] = (254,254,254)
+            self.baseimg[:,:] = (255,255,255)
 
             # Import the corner images
             corner = cv2.imread("images/C0.png")
@@ -32,12 +32,12 @@ class Projector:
             yoffset = 0
             xoffset = self.width - cw
             self.baseimg[yoffset:(ch+yoffset),xoffset:(cw+xoffset)] = corner
-            
+
             corner = cv2.imread("images/C3.png")
             yoffset = 0
             xoffset = 0
             self.baseimg[yoffset:(ch+yoffset),xoffset:(cw+xoffset)] = corner
-            
+
             # Save base arena as an image file, for later use.
             cv2.imwrite(filename, self.baseimg)
 

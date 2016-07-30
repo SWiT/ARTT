@@ -29,13 +29,13 @@ class Card:
         return
 
 
-    def setData(self, symbol, z, found = True):
+    def setData(self, symbol, z):
         global Arena
         self.time = time.time()
         self.symbol = symbol
         self.zid = z.id
 
-        self.found = found
+        self.found = True
 
         #update the card's location
         self.locZonePx = findCenter(self.symbol)
@@ -50,7 +50,7 @@ class Card:
             # Set Arena location, only side by side currently supported.
             self.locArena = (self.locZone[0] + (z.gridsize[0] * z.id), self.locZone[1])
 
-        #update the cards's heading
+        # Update the cards's heading
         x = self.symbol[3][0] - self.symbol[0][0]
         y = self.symbol[0][1] - self.symbol[3][1]
         self.radians = math.atan2(y,x)

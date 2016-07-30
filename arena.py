@@ -56,55 +56,56 @@ class Arena:
                 # Warp the zone part of the image and make it rectangular.
                 z.warpImage()
 
-                # Scan the whole image for DataMatrix.
-                self.dm.scan(z.image)
+                # Update all known cards.
+                for cn in range(0, len(self.cards)+1):
+                    # Scan the whole image for one new card
+                    self.dm.scan(z.image)
+                    for content,symbol in self.dm.symbols:
+                        # Blank the region of the image where the symbol was found.
+                        poly = array(symbol, int32)
+                        cv2.fillConvexPoly(z.image, poly, (255,255,255))
 
-                # For each detected DataMatrix symbol
-                for content,symbol in self.dm.symbols:
-                    # Card Symbol
-                    match = self.cardPattern.match(content)
-                    if match:
-                        cardid = int(match.group(1))
-                        #don't update invalid card numbers.
-                        if cardid < card.idmin or card.idmax < cardid :
-                            print cardid,"invalid"
-                            continue
+                        # Card Symbol
+                        match = self.cardPattern.match(content)
+                        if match:
+                            cardid = int(match.group(1))
+                            #don't update invalid card numbers.
+                            if cardid < card.idmin or card.idmax < cardid :
+                                print cardid,"invalid"
+                                continue
 
-                        # Try to update the card
-                        try:
-                            c = self.cards[cardid]
-
-                        # If it doesn't exist yet create it.
-                        except KeyError:
-                            c = card.Card(cardid)
-                            self.cards[cardid] = c
-
-                        c.setData(symbol, z)    #update the cards's data
+                            # Try to update the card. If it doesn't exist yet create it.
+                            try:
+                                c = self.cards[cardid]
+                            except KeyError:
+                                c = card.Card(cardid)
+                                self.cards[cardid] = c
+                            c.setData(symbol, z)    
 
             # If the zone is not calibrated           
             else:
                 # Scan each unfound corner's region of interst
-                checkcalibrated = True
+                calibrated = True
                 for c in z.corners:
                     if not c.found:
-                        checkcalibrated = False
+                        calibrated = False
                         # Scan the roi
                         roi = z.image[c.roiymin:c.roiymax, c.roixmin:c.roixmax]
                         self.dm.scan(roi, offsetx = c.roixmin, offsety = c.roiymin)
                         # For each detected DataMatrix symbol, Should be only 1.
                         for content,symbol in self.dm.symbols:
+                            # Blank the region of the image where the symbol was found.
+                            poly = array(symbol, int32)
+                            cv2.fillConvexPoly(z.image, poly, (255,255,255))                            
+
                             # Check if zone corner
                             match = self.cornerPattern.match(content)
                             if match:
                                 # Update the corners position.
                                 cid = int(match.group(1))
                                 z.corners[cid].setData(symbol)
-                                
-                            # Blank the region of the image where the symbol was found.
-                            #poly = array(symbol, int32)
-                            #cv2.fillConvexPoly(z.image, poly, 0)
-                            
-                z.calibrated = checkcalibrated
+                                                            
+                z.calibrated = calibrated
 
         #End of zone loop
         return

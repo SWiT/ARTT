@@ -16,7 +16,7 @@ class Card:
         self.radians = 0
         self.symbol = None
         self.symbolDimension = 2.0
-        self.gap = 0.25
+        self.gap = 0.35
         self.symbolDimensionPx = 0
         self.time = time.time() # time last found
         self.found = False
@@ -81,21 +81,23 @@ class Card:
 
         # Draw the cards outline.
         op = (float(self.gap) * self.symbolDimensionPx / float(self.symbolDimension) ) + (self.symbolDimensionPx/2)
-        adj = op + (1.0 * self.symbolDimensionPx / float(self.symbolDimension))
+        adj = op + (0.8 * self.symbolDimensionPx / float(self.symbolDimension))
         d = math.sqrt(op**2 + adj**2)
 
-        ang = self.radians + (math.pi-math.atan2(op,adj))
+        ang = self.radians + (math.pi - math.atan2(op,adj))
         pt0 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
 
-        ang = self.radians - (math.pi-math.atan2(op,adj))
+        ang = self.radians - (math.pi - math.atan2(op,adj))
         pt1 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
 
-        d = math.sqrt(op**2 + op**2)
+        op = (float(self.gap) * self.symbolDimensionPx / float(self.symbolDimension) ) + (self.symbolDimensionPx/2)
+        adj = op
+        d = math.sqrt(op**2 + adj**2)
 
-        ang = self.radians - (math.pi/4)
+        ang = self.radians - (math.pi/4) + 0.05
         pt2 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
 
-        ang = self.radians + (math.pi/4)
+        ang = self.radians + (math.pi/4) - 0.05
         pt3 = ( (x+int(math.cos(ang)*d)), (y-int(math.sin(ang)*d)) )
 
         drawBorder(outputImg, [pt0, pt1, pt2, pt3], color, 1)

@@ -14,6 +14,8 @@ class Zone:
         self.cap = -1        # Capture device object (OpenCV)
         self.resolutions = [(640,480),(1280,720),(1920,1080)]
         self.ri = 1          # Selected resolution Index
+        self.srcwidth = 0
+        self.srcheight = 0
 
         self.image = None
         self.width = 0
@@ -28,25 +30,20 @@ class Zone:
         self.projector = projector.Projector(570, 800)
         cv2.namedWindow("ZoneProjector"+str(idx))
 
+        self.initVideoDevice()
+        
         # Add the corners.
         self.corners = []
-        self.corners.append(corner.Corner(idx, 0))
-        self.corners.append(corner.Corner(idx, 1))
-        self.corners.append(corner.Corner(idx, 2))
-        self.corners.append(corner.Corner(idx, 3))
+        self.corners.append(corner.Corner(self, 0))
+        self.corners.append(corner.Corner(self, 1))
+        self.corners.append(corner.Corner(self, 2))
+        self.corners.append(corner.Corner(self, 3))
+        self.calibrated = False
 
-        self.initVideoDevice()
         return
 
-    # The zone is calibrated if all corners are found.
-    def calibrated(self):
-        for c in self.corners:
-            if not c.found:
-                return False
-        return True
-
-
     def recalibrate(self):
+        self.calibrated = False
         for c in self.corners:
             c.found = False
         self.M = None
@@ -107,8 +104,10 @@ class Zone:
     def initVideoDevice(self):
         if self.vdi != -1:
             self.cap = cv2.VideoCapture(self.vdi)
-            self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, self.resolutions[self.ri][0])
-            self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, self.resolutions[self.ri][1])
+            self.srcwidth = self.resolutions[self.ri][0]
+            self.srcheight = self.resolutions[self.ri][1]
+            self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, self.srcwidth)
+            self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, self.srcheight)
             self.used_vdi.append(self.vdi)
         return
 

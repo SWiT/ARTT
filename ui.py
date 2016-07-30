@@ -208,7 +208,7 @@ class UI:
         # Draw zone corner statuses
         for z in Arena.zones:
             for c in z.corners:
-                output = "Z"+str(z.id)+" C"+str(c.symbolvalue)+":"
+                output = "Z"+str(z.id)+" C"+str(c.idx)+":"
                 #output += ' '+str(int(round((time.time()-c.time)*1000,0)))
                 output += ' ' + str(c.found)
                 cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)

@@ -25,7 +25,8 @@ class Card:
 
         self.color_lastknown    = (0, 0, 255)       # Red
         self.color_detected     = (0,240,0)         # Green
-        self.color_roi          = (255, 200, 100)   # Light blue
+        self.color_roi          = (255, 200, 100)   # Light blue        
+        self.color_augtext      = (255, 0, 0)       # Blue
         return
 
 
@@ -61,6 +62,12 @@ class Card:
         self.symbolDimensionPx = dist(self.symbol[0], self.symbol[3])
         return
 
+
+    def drawAugText(self, outputImg):
+        x,y = self.locZonePx
+        cv2.putText(outputImg, str(self.id), (x-8, y+100), cv2.FONT_HERSHEY_PLAIN, 1.5, self.color_augtext, 2)
+
+        return
 
     def drawDetected(self, outputImg):
         drawBorder(outputImg, self.symbol, self.color_detected, 1)

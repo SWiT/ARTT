@@ -58,6 +58,7 @@ class Arena:
 
                 # Update all known cards.
                 for cn in range(0, len(self.cards)+1):
+                
                     # Scan the whole image for one new card
                     self.dm.scan(z.image)
                     for content,symbol in self.dm.symbols:
@@ -91,7 +92,7 @@ class Arena:
                         calibrated = False
                         # Scan the roi
                         roi = z.image[c.roiymin:c.roiymax, c.roixmin:c.roixmax]
-                        self.dm.scan(roi, offsetx = c.roixmin, offsety = c.roiymin)
+                        self.dm.scan(roi, offsetx = c.roixmin, offsety = c.roiymin) 
                         # For each detected DataMatrix symbol, Should be only 1.
                         for content,symbol in self.dm.symbols:
                             # Blank the region of the image where the symbol was found.
@@ -168,7 +169,12 @@ class Arena:
                 for cid, c in self.cards.iteritems():
                     if c.zid == z.id:
                         c.drawLastKnownLoc(img)
-                        c.drawLastKnownLoc(z.projector.outputimg)
+                        if (time.time() - c.time) > 3000:
+                            c.found = False
+                        else:
+                            c.drawLastKnownLoc(z.projector.outputimg)
+                            c.drawAugText(z.projector.outputimg)
+
                         if c.found:
                             # Draw the scanning area
                             xmin = c.locZonePx[0] - c.scanDistance

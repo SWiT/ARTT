@@ -17,24 +17,24 @@ class Corner:
         
         if idx == 0:
             self.roixmin = 0;
-            self.roixmax = width/2;
-            self.roiymin = height/2;
+            self.roixmax = width/4;
+            self.roiymin = height*3/4;
             self.roiymax = height;
         elif idx == 1:
-            self.roixmin = width/2;
+            self.roixmin = width*3/4;
             self.roixmax = width;
-            self.roiymin = height/2;
+            self.roiymin = height*3/4;
             self.roiymax = height;
         elif idx == 2:
-            self.roixmin = width/2;
+            self.roixmin = width*3/4;
             self.roixmax = width;
             self.roiymin = 0;
-            self.roiymax = height/2;
+            self.roiymax = height/4;
         elif idx == 3:
             self.roixmin = 0;
-            self.roixmax = width/2;
+            self.roixmax = width/4;
             self.roiymin = 0;
-            self.roiymax = height/2;
+            self.roiymax = height/4;
 
         self.roi =  [(self.roixmin, self.roiymin), (self.roixmin, self.roiymax), (self.roixmax, self.roiymax), (self.roixmax, self.roiymin)]
         return

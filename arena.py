@@ -1,6 +1,9 @@
 import re, os, cv2, time, re
 from numpy import *
 
+import multiprocessing as mp
+import Queue
+
 import card, zone, ui, dm
 from utils import *
 
@@ -28,6 +31,11 @@ class Arena:
 
         self.ui = ui.UI()
         self.dm = dm.DM(1, 300)
+
+        self.q = mp.Queue() # Queue of scanning results
+        self.maxprocesses = mp.cpu_count()
+        self.pool = []  # pool of processes
+
         return
 
     def updateNumberOfZones(self):
@@ -45,45 +53,81 @@ class Arena:
         for idx in range(0,self.numzones):
             self.zones.append(zone.Zone(idx, self.videodevices))
 
+    def scanSubprocess(self, timestamp, timeout, img, q):
+        dmscanner = dm.DM(1, timeout)
+        dmscanner.scan(img)
+        q.put([timestamp, dmscanner.symbols])
+        q.close()
+        return
 
     def scan(self):
         # Scan each zone.
         for z in self.zones:
             z.getImage()
+            timestamp = time.time()
 
             # If the zone is calibrated
             if z.calibrated:
                 # Warp the zone part of the image and make it rectangular.
                 z.warpImage()
 
-                # Update all known cards.
-                for cn in range(0, len(self.cards)+1):
-                
-                    # Scan the whole image for one new card
-                    self.dm.scan(z.image)
-                    for content,symbol in self.dm.symbols:
-                        # Blank the region of the image where the symbol was found.
-                        poly = array(symbol, int32)
-                        cv2.fillConvexPoly(z.image, poly, (255,255,255))
+                # Multiprocessing based scanning.
+                # Scan for all known cards and one extra.
+                for c in range(0,len(self.cards)+1):
 
-                        # Card Symbol
-                        match = self.cardPattern.match(content)
-                        if match:
-                            cardid = int(match.group(1))
-                            #don't update invalid card numbers.
-                            if cardid < card.idmin or card.idmax < cardid :
-                                print cardid,"invalid"
-                                continue
+                    # Remove finished processes from the pool.
+                    for p in self.pool:
+                        if not p.is_alive():
+                            self.pool.remove(p)
+                            print "ENDED",len(self.pool)
 
-                            # Try to update the card. If it doesn't exist yet create it.
-                            try:
-                                c = self.cards[cardid]
-                            except KeyError:
-                                c = card.Card(cardid)
-                                self.cards[cardid] = c
-                            c.setData(symbol, z)    
+                    # Add process to the pool
+                    if len(self.pool) < self.maxprocesses:
+                        p = mp.Process(target=self.scanSubprocess, args=(timestamp, self.dm.timeout, z.image, self.q))
+                        p.start()
+                        self.pool.append(p)
 
-            # If the zone is not calibrated           
+
+
+                try:
+                    while not self.q.empty():
+                        data = self.q.get(False)
+                        print data
+                        # Update the card?
+
+                except Queue.Empty:
+                    pass
+
+
+
+#                # Update all known cards.
+#                for cn in range(0, len(self.cards)+1):
+#
+#                    # Scan the whole image for one new card
+#                    self.dm.scan(z.image)
+#                    for content,symbol in self.dm.symbols:
+#                        # Blank the region of the image where the symbol was found.
+#                        poly = array(symbol, int32)
+#                        cv2.fillConvexPoly(z.image, poly, (255,255,255))
+#
+#                        # Card Symbol
+#                        match = self.cardPattern.match(content)
+#                        if match:
+#                            cardid = int(match.group(1))
+#                            #don't update invalid card numbers.
+#                            if cardid < card.idmin or card.idmax < cardid :
+#                                print cardid,"invalid"
+#                                continue
+#
+#                            # Try to update the card. If it doesn't exist yet create it.
+#                            try:
+#                                c = self.cards[cardid]
+#                            except KeyError:
+#                                c = card.Card(cardid)
+#                                self.cards[cardid] = c
+#                            c.setData(symbol, z)
+
+            # If the zone is not calibrated
             else:
                 # Scan each unfound corner's region of interst
                 calibrated = True
@@ -92,12 +136,12 @@ class Arena:
                         calibrated = False
                         # Scan the roi
                         roi = z.image[c.roiymin:c.roiymax, c.roixmin:c.roixmax]
-                        self.dm.scan(roi, offsetx = c.roixmin, offsety = c.roiymin) 
+                        self.dm.scan(roi, offsetx = c.roixmin, offsety = c.roiymin)
                         # For each detected DataMatrix symbol, Should be only 1.
                         for content,symbol in self.dm.symbols:
                             # Blank the region of the image where the symbol was found.
                             poly = array(symbol, int32)
-                            cv2.fillConvexPoly(z.image, poly, (255,255,255))                            
+                            cv2.fillConvexPoly(z.image, poly, (255,255,255))
 
                             # Check if zone corner
                             match = self.cornerPattern.match(content)
@@ -105,7 +149,7 @@ class Arena:
                                 # Update the corners position.
                                 cid = int(match.group(1))
                                 z.corners[cid].setData(symbol)
-                                                            
+
                 z.calibrated = calibrated
 
         #End of zone loop
@@ -169,7 +213,7 @@ class Arena:
                 for cid, c in self.cards.iteritems():
                     if c.zid == z.id:
                         c.drawLastKnownLoc(img)
-                        if (time.time() - c.time) > 3000:
+                        if (time.time() - c.time) > 3:
                             c.found = False
                         else:
                             c.drawLastKnownLoc(z.projector.outputimg)
@@ -189,7 +233,7 @@ class Arena:
                     outputImg[0:z.height, z.id*z.width:(z.id+1)*z.width] = img
                 else:
                     outputImg = img
-                    
+
 
         return outputImg
 

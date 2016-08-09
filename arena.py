@@ -53,12 +53,21 @@ class Arena:
         for idx in range(0,self.numzones):
             self.zones.append(zone.Zone(idx, self.videodevices))
 
-    def scanSubprocess(self, timestamp, timeout, img, q):
+    def scanSubprocess(self, timestamp, timeout, image, offsetx, offsety, q):
         dmscanner = dm.DM(1, timeout)
-        dmscanner.scan(img)
+        dmscanner.scan(image, offsetx = offsetx, offsety = offsety)
         q.put([timestamp, dmscanner.symbols])
         q.close()
         return
+
+    def addProcess(self, timestamp, image, xoffset = 0, yoffset = 0):
+        # Add process to the pool
+        if len(self.pool) < self.maxprocesses:
+            p = mp.Process(target=self.scanSubprocess, args=(timestamp, self.dm.timeout, image, xoffset, yoffset, self.q))
+            p.start()
+            self.pool.append(p)
+            return True
+        return False
 
     def scan(self):
         # Scan each zone.
@@ -72,28 +81,48 @@ class Arena:
                 z.warpImage()
 
                 # Multiprocessing based scanning.
-                # Scan for all known cards and one extra.
-                for c in range(0,len(self.cards)+1):
+                # Remove finished processes from the pool.
+                for p in self.pool:
+                    if not p.is_alive():
+                        self.pool.remove(p)
 
-                    # Remove finished processes from the pool.
-                    for p in self.pool:
-                        if not p.is_alive():
-                            self.pool.remove(p)
-                            print "ENDED",len(self.pool)
+                # Update all known cards.
+                for c in self.cards:
+                    roi = z.image[c.roiminy:c.roimaxy, c.roiminx:c.roimaxx]
+                    self.addProcess(timestamp, roi, c.roiminx, c.roiminy)
 
-                    # Add process to the pool
-                    if len(self.pool) < self.maxprocesses:
-                        p = mp.Process(target=self.scanSubprocess, args=(timestamp, self.dm.timeout, z.image, self.q))
-                        p.start()
-                        self.pool.append(p)
+                # Scan for a new card.
+                self.addProcess(timestamp, z.image)
 
 
-
+                # Do Stuff with the returned data.
                 try:
                     while not self.q.empty():
                         data = self.q.get(False)
-                        print data
-                        # Update the card?
+                        ts = data[0]    # timestamp
+                        symbols = data[1]
+                        if len(symbols) == 2:
+                            content = symbols[0]
+                            symbol = symbols[1]
+                        else:
+                            continue
+
+                        # Update if it is a card symbol.
+                        match = self.cardPattern.match(content)
+                        if match:
+                            cardid = int(match.group(1))
+                            # Don't update invalid card numbers.
+                            if cardid < card.idmin or card.idmax < cardid :
+                                print cardid,"invalid"
+                                continue
+
+                            # Try to update the card. If it doesn't exist yet, create it.
+                            try:
+                                c = self.cards[cardid]
+                            except KeyError:
+                                c = card.Card(cardid)
+                                self.cards[cardid] = c
+                            c.setData(symbol, z)
 
                 except Queue.Empty:
                     pass

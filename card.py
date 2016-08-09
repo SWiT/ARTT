@@ -8,6 +8,9 @@ class Card:
     def __init__(self, idx):
         self.id = idx
         self.zid = 0
+        self.roiminy = 0
+        self.roiminx = 0
+        self.roi =  [(0,0),(0,0),(0,0),(0,0)]
         self.scanDistance = 0
         self.locZonePx = (0,0)
         self.locZone = (0,0)
@@ -25,10 +28,19 @@ class Card:
 
         self.color_lastknown    = (0, 0, 255)       # Red
         self.color_detected     = (0,240,0)         # Green
-        self.color_roi          = (255, 200, 100)   # Light blue        
+        self.color_roi          = (255, 200, 100)   # Light blue
         self.color_augtext      = (255, 0, 0)       # Blue
         return
 
+    def updateRoi(self):
+        self.scanDistance = 200
+        miny = self.locZonePx[0] - self.scanDistance
+        minx = self.locZonePx[1] - self.scanDistance
+        maxy = self.locZonePx[0] + self.scanDistance
+        maxx = self.locZonePx[1] + self.scanDistance
+        self.roiminy = miny
+        self.roiminx = minx
+        self.roi =  [(minx, miny), (minx, maxy), (maxx, maxy), (maxx, miny)]
 
     def setData(self, symbol, z):
         global Arena
@@ -50,6 +62,9 @@ class Card:
             self.locZone = (zoneX, zoneY)
             # Set Arena location, only side by side currently supported.
             self.locArena = (self.locZone[0] + (z.gridsize[0] * z.id), self.locZone[1])
+
+        # Update the region of interest.
+        updateRoi()
 
         # Update the cards's heading
         x = self.symbol[3][0] - self.symbol[0][0]

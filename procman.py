@@ -12,21 +12,20 @@ class ProcessManager:
         self.maxprocesses = mp.cpu_count()
         self.procpool = []  # Pool of processes
         self.dataque = mp.Queue() # Data waiting to be processed.
-        return
+
 
     def scanSubprocess(self, timestamp, timeout, image, offsetx, offsety, resultsque):
         dmscanner = dm.DM(1, timeout)
         dmscanner.scan(image, offsetx = offsetx, offsety = offsety)
         resultsque.put([timestamp, dmscanner.symbols])
         resultsque.close()
-        return
+
 
     def removeFinished(self):
         # Remove finished processes from the pool.
         for p in self.procpool:
             if not p.is_alive():
                 self.procpool.remove(p)
-        return
 
 
     def addProcess(self, timestamp, timeout, image, xoffset = 0, yoffset = 0):
@@ -35,14 +34,16 @@ class ProcessManager:
             p = mp.Process(target=self.scanSubprocess, args=(timestamp, timeout, image, xoffset, yoffset, self.resultsque))
             p.start()
             self.procpool.append(p)
+            print "Process launched."
             return True
         else:
             # Pool is full.
+            print "Pool is full."
             pass
         return False
 
 
-    def results(self):
+    def resultsAvailable(self):
         return not self.resultsque.empty()
 
 

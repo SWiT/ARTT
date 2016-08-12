@@ -66,7 +66,7 @@ class Arena:
                 z.warpImage()
 
                 # Do Stuff with any returned symbol data.
-                while self.procman.results():
+                while self.procman.resultsAvailable():
                     data = self.procman.getResult()
                     if len(data) == 2:
                         ts = data[0]    # timestamp
@@ -74,6 +74,7 @@ class Arena:
                     else:
                         continue
 
+                    # For now look for only 1 symbol in the results.
                     if len(symbols) == 1:
                         content = symbols[0][0]
                         points = symbols[0][1]

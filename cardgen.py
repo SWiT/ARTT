@@ -16,7 +16,7 @@ pdf = ""
 margin = 0.25
 cwidth = 2.5
 cheight = 3.45
-    
+
 imgfile = "temp.png" # Temporary image file name.
 
 pretext = ""
@@ -76,7 +76,7 @@ def drawTemplateLines():
 
 def drawCard(pos, text):
     x = pos[0]
-    y = pos[1]    
+    y = pos[1]
     pdf.drawInlineImage(imgfile, x-(0.23*inch), y+((cheight-cwidth)*inch)-(0.28*inch), width=3*inch, height=3*inch)
     pdf.setFillColorRGB(0.85,0.85,0.85)
     pdf.setFont("Helvetica", 7)
@@ -89,25 +89,25 @@ def drawCard(pos, text):
 
 # Parse options and parameters.
 for index, arg in enumerate(sys.argv):
-    if arg == "--help":   
+    if arg == "--help":
         displayHelp()
         quit()
 
-    elif arg == "--pre":   
+    elif arg == "--pre":
         pretext = sys.argv[index+1]
 
-    elif arg == "--start":   
+    elif arg == "--start":
         cnstart = int(sys.argv[index+1])
 
-    elif arg == "--end":   
+    elif arg == "--end":
         cnend = int(sys.argv[index+1])
 
-    elif arg == "--post":   
+    elif arg == "--post":
         posttest = sys.argv[index+1]
 
     elif os.path.splitext(arg)[1] == ".pdf":
         outputfile = arg
-     
+
 # Validate options and parameters or display help.
 error = False
 if outputfile == "":
@@ -118,7 +118,7 @@ if error:
     quit()
 
 pdf = canvas.Canvas(outputfile, pagesize=letter)
-    
+
 pagepos = 0
 cardcount = 0
 
@@ -127,14 +127,14 @@ for cn in range(cnstart, cnend+1):
     dmtext += pretext
     dmtext +=  str(cn).zfill(2)
     dmtext += posttext
-    
+
     DM.write(dmtext, imgfile)
-    
+
     # There seems to be a bug in reportlab.
     # Strings are drawn in the A4 template even though we've set the pagesize to letter.
     # Do text positioning based on A4.
     if pagepos == 0:
-        pos = margin*inch, margin*inch    
+        pos = margin*inch, margin*inch
     elif pagepos == 1:
         pos = (margin+cwidth)*inch, margin*inch
     elif pagepos == 2:
@@ -142,36 +142,36 @@ for cn in range(cnstart, cnend+1):
     elif pagepos == 3:
         pos = margin*inch, (margin+cheight)*inch
     elif pagepos == 4:
-        pos = (margin+cwidth)*inch, (margin+cheight)*inch 
+        pos = (margin+cwidth)*inch, (margin+cheight)*inch
     elif pagepos == 5:
         pos = (margin+cwidth*2)*inch, (margin+cheight)*inch
     elif pagepos == 6:
         pos = margin*inch, (margin+(2*cheight))*inch
     elif pagepos == 7:
-        pos = (margin+cwidth)*inch, (margin+(2*cheight))*inch 
+        pos = (margin+cwidth)*inch, (margin+(2*cheight))*inch
     elif pagepos == 8:
         pos = (margin+cwidth*2)*inch, (margin+(2*cheight))*inch
-    
+
 
     drawCard(pos, dmtext)
-        
+
     if pagepos >= 8:
-        drawTemplateLines()        
+        drawTemplateLines()
         pdf.save()
         pagepos = -1
-    
+
     pagepos += 1
     cardcount += 1
 
 
-     
+
 if pagepos != 0:
     drawTemplateLines()
     pdf.save()
 
-os.remove(imgfile)
+#os.remove(imgfile)
 
-print        
+print
 print str(cardcount)+" cards created in "+outputfile
 print
-    
+

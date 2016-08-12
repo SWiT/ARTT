@@ -101,8 +101,7 @@ class Arena:
                 self.procman.removeFinished()
 
                 # Scan for all known cards.
-                print self.cards
-                for c in self.cards:
+                for cid, c in self.cards.iteritems():
                     roi = z.image[c.roiminy:c.roimaxy, c.roiminx:c.roimaxx]
                     self.procman.addProcess(timestamp, self.scantimeout, roi, c.roiminx, c.roiminy)
 

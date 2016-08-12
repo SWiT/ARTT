@@ -40,6 +40,8 @@ class Card:
         maxx = self.locZonePx[1] + self.scanDistance
         self.roiminy = miny
         self.roiminx = minx
+        self.roimaxy = maxy
+        self.roimaxx = maxx
         self.roi =  [(minx, miny), (minx, maxy), (maxx, maxy), (maxx, miny)]
 
     def setData(self, symbol, z):

@@ -1,10 +1,7 @@
 import re, os, cv2, time, re
 from numpy import *
 
-import multiprocessing as mp
-import Queue
-
-import card, zone, ui, dm
+import card, zone, ui, dm, procman
 from utils import *
 
 class Arena:
@@ -30,13 +27,16 @@ class Arena:
         self.buildZones()
 
         self.ui = ui.UI()
-        self.dm = dm.DM(1, 300)
+        self.scantimeout = 300
+        self.dm = dm.DM(1, self.scantimeout)
 
-        self.q = mp.Queue() # Queue of scanning results
-        self.maxprocesses = mp.cpu_count()
-        self.pool = []  # pool of processes
+        self.procman = procman.ProcessManager()
 
         return
+
+    def setScanTimeout(self, v):
+        self.scantimeout = v
+        self.dm.setTimeout(self.scantimeout)
 
     def updateNumberOfZones(self):
         self.numzones += 1
@@ -53,21 +53,6 @@ class Arena:
         for idx in range(0,self.numzones):
             self.zones.append(zone.Zone(idx, self.videodevices))
 
-    def scanSubprocess(self, timestamp, timeout, image, offsetx, offsety, q):
-        dmscanner = dm.DM(1, timeout)
-        dmscanner.scan(image, offsetx = offsetx, offsety = offsety)
-        q.put([timestamp, dmscanner.symbols])
-        q.close()
-        return
-
-    def addProcess(self, timestamp, image, xoffset = 0, yoffset = 0):
-        # Add process to the pool
-        if len(self.pool) < self.maxprocesses:
-            p = mp.Process(target=self.scanSubprocess, args=(timestamp, self.dm.timeout, image, xoffset, yoffset, self.q))
-            p.start()
-            self.pool.append(p)
-            return True
-        return False
 
     def scan(self):
         # Scan each zone.
@@ -80,81 +65,49 @@ class Arena:
                 # Warp the zone part of the image and make it rectangular.
                 z.warpImage()
 
-                # Multiprocessing based scanning.
-                # Remove finished processes from the pool.
-                for p in self.pool:
-                    if not p.is_alive():
-                        self.pool.remove(p)
+                # Do Stuff with any returned symbol data.
+                while self.procman.results():
+                    data = self.procman.getResult()
+                    ts = data[0]    # timestamp
+                    symbols = data[1]
+                    if len(symbols) == 2:
+                        content = symbols[0]
+                        symbol = symbols[1]
+                    else:
+                        continue
 
-                # Update all known cards.
-                for c in self.cards:
-                    roi = z.image[c.roiminy:c.roimaxy, c.roiminx:c.roimaxx]
-                    self.addProcess(timestamp, roi, c.roiminx, c.roiminy)
-
-                # Scan for a new card.
-                self.addProcess(timestamp, z.image)
-
-
-                # Do Stuff with the returned data.
-                try:
-                    while not self.q.empty():
-                        data = self.q.get(False)
-                        ts = data[0]    # timestamp
-                        symbols = data[1]
-                        if len(symbols) == 2:
-                            content = symbols[0]
-                            symbol = symbols[1]
-                        else:
+                    # Update or Add if it is a card symbol.
+                    match = self.cardPattern.match(content)
+                    if match:
+                        cardid = int(match.group(1))
+                        # Don't update invalid card numbers.
+                        if cardid < card.idmin or card.idmax < cardid :
+                            print cardid,"invalid"
                             continue
 
-                        # Update if it is a card symbol.
-                        match = self.cardPattern.match(content)
-                        if match:
-                            cardid = int(match.group(1))
-                            # Don't update invalid card numbers.
-                            if cardid < card.idmin or card.idmax < cardid :
-                                print cardid,"invalid"
-                                continue
+                        # Try to update the card. If it doesn't exist yet, create it.
+                        try:
+                            c = self.cards[cardid]
+                        except KeyError:
+                            c = card.Card(cardid)
+                            self.cards[cardid] = c
+                        c.setData(symbol, z)
 
-                            # Try to update the card. If it doesn't exist yet, create it.
-                            try:
-                                c = self.cards[cardid]
-                            except KeyError:
-                                c = card.Card(cardid)
-                                self.cards[cardid] = c
-                            c.setData(symbol, z)
+                # Remove finished processes from the pool.
+                self.procman.removeFinished()
 
-                except Queue.Empty:
-                    pass
+                # Scan for all known cards.
+                for c in self.cards:
+                    roi = z.image[c.roiminy:c.roimaxy, c.roiminx:c.roimaxx]
+                    self.procman.addProcess(timestamp, self.scantimeout, roi, c.roiminx, c.roiminy)
 
+                    # Blank the region of the image where the symbol was last seen.
+                    poly = array(c.symbol, int32)
+                    cv2.fillConvexPoly(z.image, poly, (245,255,245))
 
+                # Scan for a new symbol.
+                self.procman.addProcess(timestamp, self.scantimeout, z.image)
 
-#                # Update all known cards.
-#                for cn in range(0, len(self.cards)+1):
-#
-#                    # Scan the whole image for one new card
-#                    self.dm.scan(z.image)
-#                    for content,symbol in self.dm.symbols:
-#                        # Blank the region of the image where the symbol was found.
-#                        poly = array(symbol, int32)
-#                        cv2.fillConvexPoly(z.image, poly, (255,255,255))
-#
-#                        # Card Symbol
-#                        match = self.cardPattern.match(content)
-#                        if match:
-#                            cardid = int(match.group(1))
-#                            #don't update invalid card numbers.
-#                            if cardid < card.idmin or card.idmax < cardid :
-#                                print cardid,"invalid"
-#                                continue
-#
-#                            # Try to update the card. If it doesn't exist yet create it.
-#                            try:
-#                                c = self.cards[cardid]
-#                            except KeyError:
-#                                c = card.Card(cardid)
-#                                self.cards[cardid] = c
-#                            c.setData(symbol, z)
 
             # If the zone is not calibrated
             else:

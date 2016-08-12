@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     Arena = arena.Arena() # Initialize the arena.
 
-    cv2.createTrackbar('Scan (ms)', 'ArenaControlPanel', Arena.dm.timeout, 1000, Arena.dm.setTimeout)
+    cv2.createTrackbar('Scan (ms)', 'ArenaControlPanel', Arena.scantimeout, 1000, Arena.setScanTimeout)
     cv2.setMouseCallback("ArenaControlPanel", Arena.ui.onMouse, Arena)
 
 

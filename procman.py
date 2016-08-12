@@ -37,7 +37,7 @@ class ProcessManager:
             self.procpool.append(p)
             return True
         else:
-            # Pool is full. 
+            # Pool is full.
             pass
         return False
 
@@ -50,5 +50,6 @@ class ProcessManager:
         try:
             r = self.resultsque.get(False)
         except Queue.Empty:
+            print "no results in queue."
             r = []
         return r

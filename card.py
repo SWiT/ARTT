@@ -64,7 +64,7 @@ class Card:
             self.locArena = (self.locZone[0] + (z.gridsize[0] * z.id), self.locZone[1])
 
         # Update the region of interest.
-        updateRoi()
+        self.updateRoi()
 
         # Update the cards's heading
         x = self.symbol[3][0] - self.symbol[0][0]

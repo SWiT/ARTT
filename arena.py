@@ -68,11 +68,15 @@ class Arena:
                 # Do Stuff with any returned symbol data.
                 while self.procman.results():
                     data = self.procman.getResult()
-                    ts = data[0]    # timestamp
-                    symbols = data[1]
-                    if len(symbols) == 2:
-                        content = symbols[0]
-                        symbol = symbols[1]
+                    if len(data) == 2:
+                        ts = data[0]    # timestamp
+                        symbols = data[1]
+                    else:
+                        continue
+
+                    if len(symbols) == 1:
+                        content = symbols[0][0]
+                        points = symbols[0][1]
                     else:
                         continue
 
@@ -91,12 +95,13 @@ class Arena:
                         except KeyError:
                             c = card.Card(cardid)
                             self.cards[cardid] = c
-                        c.setData(symbol, z)
+                        c.setData(points, z)
 
                 # Remove finished processes from the pool.
                 self.procman.removeFinished()
 
                 # Scan for all known cards.
+                print self.cards
                 for c in self.cards:
                     roi = z.image[c.roiminy:c.roimaxy, c.roiminx:c.roimaxx]
                     self.procman.addProcess(timestamp, self.scantimeout, roi, c.roiminx, c.roiminy)

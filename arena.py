@@ -65,7 +65,7 @@ class Arena:
                 # Warp the zone part of the image and make it rectangular.
                 z.warpImage()
 
-                # Do Stuff with any returned symbol data.
+                # Handle any returned symbol data.
                 while self.procman.resultsAvailable():
                     data = self.procman.getResult()
                     if len(data) == 2:
@@ -74,10 +74,10 @@ class Arena:
                     else:
                         continue
 
-                    # For now look for only 1 symbol in the results.
+                    # Check that there is only 1 symbol in the results.
                     if len(symbols) == 1:
                         content = symbols[0][0]
-                        points = symbols[0][1]
+                        symbol = symbols[0][1]
                     else:
                         continue
 
@@ -96,7 +96,7 @@ class Arena:
                         except KeyError:
                             c = card.Card(cardid)
                             self.cards[cardid] = c
-                        c.setData(points, z)
+                        c.setData(symbol, z, ts)
 
                 # Remove finished processes from the pool.
                 self.procman.removeFinished()
@@ -198,23 +198,18 @@ class Arena:
 
                 # Last known card locations
                 for cid, c in self.cards.iteritems():
-                    if c.zid == z.id:
-                        c.drawLastKnownLoc(img)
-                        if (time.time() - c.time) > 3:
+                    if c.zid == z.id and c.found:
+                        if (time.time() - c.timeseen) > 3:
                             c.found = False
-                        else:
-                            c.drawLastKnownLoc(z.projector.outputimg)
-                            c.drawAugText(z.projector.outputimg)
+                            continue
 
-                        if c.found:
-                            # Draw the scanning area
-                            xmin = c.locZonePx[0] - c.scanDistance
-                            xmax = c.locZonePx[0] + c.scanDistance
-                            ymin = c.locZonePx[1] - c.scanDistance
-                            ymax = c.locZonePx[1] + c.scanDistance
-                            drawBorder(img, [(xmin,ymax),(xmax,ymax),(xmax,ymin),(xmin,ymin)], self.ui.COLOR_LBLUE, 2)
+                        c.draw(img)
+                        c.drawRoi(img)
+                        c.drawAugText(img)
 
-                            c.drawDetected(img)   # Draw a border on the symbol.
+                        c.draw(z.projector.outputimg)
+                        c.drawRoi(z.projector.outputimg)
+                        c.drawAugText(z.projector.outputimg)
 
                 if self.ui.displayAll():
                     outputImg[0:z.height, z.id*z.width:(z.id+1)*z.width] = img

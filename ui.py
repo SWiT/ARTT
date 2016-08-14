@@ -199,7 +199,7 @@ class UI:
             output += ' Z'+str(c.zid)
             output += ' '+str(c.locArena)
             output += ' '+str(c.heading)
-            output += ' '+str(int(round((time.time()-c.time)*1000,0)))
+            output += ' '+str(int(round((time.time()-c.timeseen),0)))
             cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
             self.menurows.append("card"+str(c.id))
             self.nextrow()

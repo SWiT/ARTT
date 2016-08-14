@@ -10,6 +10,8 @@ class Card:
         self.zid = 0
         self.roiminy = 0
         self.roiminx = 0
+        self.roimaxy = 0
+        self.roimaxx = 0
         self.roi =  [(0,0),(0,0),(0,0),(0,0)]
         self.scanDistance = 0
         self.locZonePx = (0,0)
@@ -18,10 +20,12 @@ class Card:
         self.heading = 0
         self.radians = 0
         self.symbol = None
-        self.symbolDimension = 2.0
-        self.gap = 0.35
         self.symbolDimensionPx = 0
-        self.time = time.time() # time last found
+        self.symbolDimension = 2.0 # Real life size
+        self.gap = 0.35
+        self.timeseen = 0 # time last found
+        self.timescan = 0 # time last scanned for
+        self.scandelay = 33 # ms to wait between scans.
         self.found = False
 
         self.dimensions = (2.5, 3.5)
@@ -44,9 +48,9 @@ class Card:
         self.roimaxx = maxx
         self.roi =  [(minx, miny), (minx, maxy), (maxx, maxy), (maxx, miny)]
 
-    def setData(self, symbol, z):
+    def setData(self, symbol, z, timestamp):
         global Arena
-        self.time = time.time()
+        self.timeseen = timestamp
         self.symbol = symbol
         self.zid = z.id
 
@@ -54,16 +58,14 @@ class Card:
 
         #update the card's location
         self.locZonePx = findCenter(self.symbol)
-        wallCenterX = findCenter([z.corners[1].location, z.corners[0].location])
-        wallCenterY = findCenter([z.corners[3].location, z.corners[0].location])
-        maxX = z.corners[1].location[0] - z.corners[0].location[0]
-        maxY = z.corners[3].location[1] - z.corners[0].location[1]
-        if abs(maxX) > 0 and abs(maxY) > 0:
-            zoneX = int(float(self.locZonePx[0]-wallCenterY[0])/float(maxX)*z.gridsize[0])
-            zoneY = int(float(self.locZonePx[1]-wallCenterX[1])/float(maxY)*z.gridsize[1])
-            self.locZone = (zoneX, zoneY)
-            # Set Arena location, only side by side currently supported.
-            self.locArena = (self.locZone[0] + (z.gridsize[0] * z.id), self.locZone[1])
+
+        zoneX = int((self.locZonePx[0] / z.width) * z.gridsize[0])
+        zoneY = int((self.locZonePx[1] / z.height) * z.gridsize[1])
+        self.locZone = (zoneX, zoneY)
+
+        # Set Arena location, only side by side currently supported.
+        # TODO: more elaborate arena/zone patterns.
+        self.locArena = (self.locZone[0] + (z.gridsize[0] * z.id), self.locZone[1])
 
         # Update the region of interest.
         self.updateRoi()
@@ -83,19 +85,19 @@ class Card:
     def drawAugText(self, outputImg):
         x,y = self.locZonePx
         cv2.putText(outputImg, str(self.id), (x-8, y+100), cv2.FONT_HERSHEY_PLAIN, 1.5, self.color_augtext, 2)
-
         return
 
-    def drawDetected(self, outputImg):
-        drawBorder(outputImg, self.symbol, self.color_detected, 1)
-
-        x,y = self.locZonePx
-        cv2.putText(outputImg, str(self.id), (x-8, y+8), cv2.FONT_HERSHEY_PLAIN, 1.5, self.color_detected, 2)
-
+    def drawRoi(self, outputImg):
+        # Draw the scanning area (region of interest)
+        xmin = self.locZonePx[0] - self.scanDistance
+        xmax = self.locZonePx[0] + self.scanDistance
+        ymin = self.locZonePx[1] - self.scanDistance
+        ymax = self.locZonePx[1] + self.scanDistance
+        drawBorder(outputImg, [(xmin,ymax),(xmax,ymax),(xmax,ymin),(xmin,ymin)], self.color_roi, 2)
         return
 
 
-    def drawLastKnownLoc(self, outputImg):
+    def draw(self, outputImg):
         global Arena
         x,y = self.locZonePx
         if x == 0 and y == 0:

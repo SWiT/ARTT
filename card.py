@@ -14,9 +14,9 @@ class Card:
         self.roimaxx = 0
         self.roi =  [(0,0),(0,0),(0,0),(0,0)]
         self.scanDistance = 150
-        self.locZonePx = (0,0)
-        self.locZone = (0,0)
-        self.locArena = (0,0)
+        self.location = (0,0)   # The location of the object in the image in pixels.
+        self.locZone = (0,0)    # The location of the object in the Zone's grid.
+        self.locArena = (0,0)   # The location of the object in the Arena.
         self.heading = 0
         self.radians = 0
         self.symbol = None
@@ -37,10 +37,10 @@ class Card:
         return
 
     def updateRoi(self):
-        miny = max(self.locZonePx[1] - self.scanDistance, 0)
-        minx = max(self.locZonePx[0] - self.scanDistance, 0)
-        maxy = min(self.locZonePx[1] + self.scanDistance, self.z.height)
-        maxx = min(self.locZonePx[0] + self.scanDistance, self.z.width)
+        miny = max(self.location[1] - self.scanDistance, 0)
+        minx = max(self.location[0] - self.scanDistance, 0)
+        maxy = min(self.location[1] + self.scanDistance, self.z.height)
+        maxx = min(self.location[0] + self.scanDistance, self.z.width)
         self.roiminy = miny
         self.roiminx = minx
         self.roimaxy = maxy
@@ -56,10 +56,10 @@ class Card:
         self.found = True
 
         #update the card's location
-        self.locZonePx = findCenter(self.symbol)
+        self.location = findCenter(self.symbol)
 
-        zoneX = int((self.locZonePx[0] / z.width) * z.gridsize[0])
-        zoneY = int((self.locZonePx[1] / z.height) * z.gridsize[1])
+        zoneX = int((self.location[0] / z.width) * z.gridsize[0])
+        zoneY = int((self.location[1] / z.height) * z.gridsize[1])
         self.locZone = (zoneX, zoneY)
 
         # Set Arena location, only side by side currently supported.
@@ -82,7 +82,7 @@ class Card:
 
 
     def drawAugText(self, outputImg):
-        x,y = self.locZonePx
+        x,y = self.location
         cv2.putText(outputImg, str(self.id), (x-8, y+100), cv2.FONT_HERSHEY_PLAIN, 1.5, self.color_augtext, 2)
         return
 
@@ -94,7 +94,7 @@ class Card:
 
     def draw(self, outputImg):
         global Arena
-        x,y = self.locZonePx
+        x,y = self.location
         if x == 0 and y == 0:
             return
 

@@ -109,7 +109,7 @@ class Arena:
                     # Blank the region of the image where the symbol was last seen.
                     poly = array(c.symbol, int32)
                     cv2.fillConvexPoly(z.image, poly, (255,255,255))
-                    cv2.putText(z.image, str(c.id), (c.locZonePx[0]-8, c.locZonePx[1]+8), cv2.FONT_HERSHEY_PLAIN, 1.5, c.color_augtext, 2)
+                    cv2.putText(z.image, str(c.id), (c.location[0]-8, c.location[1]+8), cv2.FONT_HERSHEY_PLAIN, 1.5, c.color_augtext, 2)
 
 
                 # Scan for a new symbol.

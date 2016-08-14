@@ -108,7 +108,9 @@ class Arena:
 
                     # Blank the region of the image where the symbol was last seen.
                     poly = array(c.symbol, int32)
-                    cv2.fillConvexPoly(z.image, poly, (245,255,245))
+                    cv2.fillConvexPoly(z.image, poly, (255,255,255))
+                    cv2.putText(z.image, str(c.id), (c.locZonePx[0]-8, c.locZonePx[1]+8), cv2.FONT_HERSHEY_PLAIN, 1.5, c.color_augtext, 2)
+
 
                 # Scan for a new symbol.
                 self.procman.addProcess(timestamp, self.scantimeout, z.image)
@@ -198,14 +200,12 @@ class Arena:
 
                 # Last known card locations
                 for cid, c in self.cards.iteritems():
-                    if c.zid == z.id and c.found:
+                    if c.z.id == z.id and c.found:
                         if (time.time() - c.timeseen) > 3:
                             c.found = False
                             continue
 
-                        c.draw(img)
                         c.drawRoi(img)
-                        c.drawAugText(img)
 
                         c.draw(z.projector.outputimg)
                         c.drawRoi(z.projector.outputimg)

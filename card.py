@@ -7,13 +7,13 @@ idmax   = 53
 class Card:
     def __init__(self, idx):
         self.id = idx
-        self.zid = 0
+        self.z = None   # The zone the card is in.
         self.roiminy = 0
         self.roiminx = 0
         self.roimaxy = 0
         self.roimaxx = 0
         self.roi =  [(0,0),(0,0),(0,0),(0,0)]
-        self.scanDistance = 0
+        self.scanDistance = 150
         self.locZonePx = (0,0)
         self.locZone = (0,0)
         self.locArena = (0,0)
@@ -37,11 +37,10 @@ class Card:
         return
 
     def updateRoi(self):
-        self.scanDistance = 200
-        miny = self.locZonePx[0] - self.scanDistance
-        minx = self.locZonePx[1] - self.scanDistance
-        maxy = self.locZonePx[0] + self.scanDistance
-        maxx = self.locZonePx[1] + self.scanDistance
+        miny = max(self.locZonePx[1] - self.scanDistance, 0)
+        minx = max(self.locZonePx[0] - self.scanDistance, 0)
+        maxy = min(self.locZonePx[1] + self.scanDistance, self.z.height)
+        maxx = min(self.locZonePx[0] + self.scanDistance, self.z.width)
         self.roiminy = miny
         self.roiminx = minx
         self.roimaxy = maxy
@@ -52,7 +51,7 @@ class Card:
         global Arena
         self.timeseen = timestamp
         self.symbol = symbol
-        self.zid = z.id
+        self.z = z
 
         self.found = True
 
@@ -89,11 +88,7 @@ class Card:
 
     def drawRoi(self, outputImg):
         # Draw the scanning area (region of interest)
-        xmin = self.locZonePx[0] - self.scanDistance
-        xmax = self.locZonePx[0] + self.scanDistance
-        ymin = self.locZonePx[1] - self.scanDistance
-        ymax = self.locZonePx[1] + self.scanDistance
-        drawBorder(outputImg, [(xmin,ymax),(xmax,ymax),(xmax,ymin),(xmin,ymin)], self.color_roi, 2)
+        drawBorder(outputImg, self.roi, self.color_roi, 2)
         return
 
 

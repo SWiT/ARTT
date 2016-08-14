@@ -196,7 +196,7 @@ class UI:
         # Draw card statuses and settings
         for k, c in Arena.cards.iteritems():
             output = str(c.id)+":"
-            output += ' Z'+str(c.zid)
+            output += ' Z'+str(c.z.id)
             output += ' '+str(c.locArena)
             output += ' '+str(c.heading)
             output += ' '+str(int(round((time.time()-c.timeseen),0)))

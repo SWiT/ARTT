@@ -107,6 +107,12 @@ class Arena:
                     self.procman.addProcess(timestamp, self.scantimeout, roi, c.roiminx, c.roiminy)
 
                     # Blank the region of the image where the symbol was last seen.
+                    # Remove jitter by no includeing symbol[2]
+                    #s = copy(c.symbol)
+                    #s.pop(2)
+                    #s = np.delete()
+                    #print c.symbol
+                    #print s,"\n"
                     poly = array(c.symbol, int32)
                     cv2.fillConvexPoly(z.image, poly, (255,255,255))
                     cv2.putText(z.image, str(c.id), (c.location[0]-8, c.location[1]+8), cv2.FONT_HERSHEY_PLAIN, 1.5, c.color_augtext, 2)

@@ -56,6 +56,7 @@ class Card:
         self.found = True
 
         #update the card's location
+        #self.symbol # remove the 3rd corner to prevent some jitter.
         self.location = findCenter(self.symbol)
 
         zoneX = int((self.location[0] / z.width) * z.gridsize[0])

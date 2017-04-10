@@ -68,5 +68,7 @@ class Projector:
 
             self.outputtype = "calibrate"
 
+        self.baseimg = cv2.flip(self.baseimg, 1) # Flip X axis
+        self.baseimg = cv2.flip(self.baseimg, 0) # Flip Y axis
         self.outputimg = self.baseimg.copy()
         return

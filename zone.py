@@ -28,7 +28,7 @@ class Zone:
         self.warpheight = 0
 
         self.projector = projector.Projector(570, 800)
-        cv2.namedWindow("ZoneProjector"+str(idx))
+        cv2.namedWindow("ZoneProjector"+str(idx), cv2.WND_PROP_FULLSCREEN)
 
         self.initVideoDevice()
 

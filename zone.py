@@ -31,7 +31,7 @@ class Zone:
         cv2.namedWindow("ZoneProjector"+str(idx))
 
         self.initVideoDevice()
-        
+
         # Add the corners.
         self.corners = []
         self.corners.append(corner.Corner(self, 0))
@@ -106,8 +106,8 @@ class Zone:
             self.cap = cv2.VideoCapture(self.vdi)
             self.srcwidth = self.resolutions[self.ri][0]
             self.srcheight = self.resolutions[self.ri][1]
-            self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, self.srcwidth)
-            self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, self.srcheight)
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.srcwidth)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.srcheight)
             self.used_vdi.append(self.vdi)
         return
 

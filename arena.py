@@ -27,7 +27,7 @@ class Arena:
         self.buildZones()
 
         self.ui = ui.UI()
-        self.scantimeout = 300
+        self.scantimeout = 10
         self.dm = dm.DM(1, self.scantimeout)
 
         self.procman = procman.ProcessManager()

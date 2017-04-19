@@ -1,5 +1,4 @@
 import cv2
-import cv2.aruco as aruco
 from numpy import *
 
 import arena
@@ -10,21 +9,12 @@ if __name__ == '__main__':
     ###############
     cv2.namedWindow("ArenaScanner")
     cv2.namedWindow("ArenaControlPanel")
-    cv2.namedWindow("ARUCO")
     cv2.startWindowThread()
 
     Arena = arena.Arena() # Initialize the arena.
 
     cv2.createTrackbar('Scan (ms)', 'ArenaControlPanel', Arena.scantimeout, 1000, Arena.setScanTimeout)
     cv2.setMouseCallback("ArenaControlPanel", Arena.ui.onMouse, Arena)
-
-    aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
-
-    for markerid in range(0,50):
-        img = aruco.drawMarker(aruco_dict, markerid, 200)
-        cv2.imwrite("images/4X4_50_"+str(markerid)+".png", img)
-        cv2.imshow('ARUCO',img)
-
 
     ###############
     ## LOOP

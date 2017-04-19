@@ -1,4 +1,5 @@
 import cv2
+import cv2.aruco as aruco
 from numpy import *
 from utils import *
 
@@ -36,35 +37,38 @@ class Projector:
 
 
     def outputCalibrationImage(self):
-        #TODO: generate Corner symbols on the fly based on a size value.
+        # Don't regenerate the calibrate image if already outputing it.
         if self.outputtype != "calibrate":
-            # Base arena file not found.
-            # Create a empty white image.
+            # Create an empty white image.
             self.baseimg = zeros((self.height,self.width,3), uint8)
             self.baseimg[:,:] = (255,255,255)
 
-            # Import the corner images
-            corner = cv2.imread("images/C0.png")
-            ch = corner.shape[0]
-            cw = corner.shape[1]
-            yoffset = self.height - ch
-            xoffset = 0
-            self.baseimg[yoffset:(ch+yoffset),xoffset:(cw+xoffset)] = corner
+            # Prepare the marker dictionary.
+            aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
+            # Set the marker size and margin.
+            markersize = 60
+            margin = 6
 
-            corner = cv2.imread("images/C1.png")
-            yoffset = self.height - ch
-            xoffset = self.width - cw
-            self.baseimg[yoffset:(ch+yoffset),xoffset:(cw+xoffset)] = corner
+            # Draw the marker and convert it to a color image.
+            marker = cv2.cvtColor(aruco.drawMarker(aruco_dict, 0, markersize), cv2.COLOR_GRAY2BGR)
+            yoffset = self.height - markersize - margin
+            xoffset = margin
+            self.baseimg[yoffset:(markersize+yoffset),xoffset:(markersize+xoffset)] = marker
 
-            corner = cv2.imread("images/C2.png")
-            yoffset = 0
-            xoffset = self.width - cw
-            self.baseimg[yoffset:(ch+yoffset),xoffset:(cw+xoffset)] = corner
+            marker = cv2.cvtColor(aruco.drawMarker(aruco_dict, 1, markersize), cv2.COLOR_GRAY2BGR)
+            yoffset = self.height - markersize - margin
+            xoffset = self.width - markersize - margin
+            self.baseimg[yoffset:(markersize+yoffset),xoffset:(markersize+xoffset)] = marker
 
-            corner = cv2.imread("images/C3.png")
-            yoffset = 0
-            xoffset = 0
-            self.baseimg[yoffset:(ch+yoffset),xoffset:(cw+xoffset)] = corner
+            marker = cv2.cvtColor(aruco.drawMarker(aruco_dict, 2, markersize), cv2.COLOR_GRAY2BGR)
+            yoffset = margin
+            xoffset = self.width - markersize - margin
+            self.baseimg[yoffset:(markersize+yoffset),xoffset:(markersize+xoffset)] = marker
+
+            marker = cv2.cvtColor(aruco.drawMarker(aruco_dict, 3, markersize), cv2.COLOR_GRAY2BGR)
+            yoffset = margin
+            xoffset = margin
+            self.baseimg[yoffset:(markersize+yoffset),xoffset:(markersize+xoffset)] = marker
 
             self.outputtype = "calibrate"
 

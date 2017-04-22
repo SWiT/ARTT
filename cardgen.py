@@ -1,16 +1,12 @@
-import qrcode
+import cv2
+import cv2.aruco as aruco
 import sys
 import os
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter, A4
 
-import Image
-
-from pydmtx import DataMatrix
-import dm
-
-DM = dm.DM(10, 500)
+#import Image
 
 pdf = ""
 
@@ -21,10 +17,8 @@ cheight = 3.45
 
 imgfile = "temp.png" # Temporary image file name.
 
-pretext = ""
 cnstart = 0
 cnend = 8
-posttext = ""
 outputfile = ""
 
 def displayHelp():
@@ -33,10 +27,8 @@ def displayHelp():
     print "Example:"
     print "\tpython "+sys.argv[0]+" deck.pdf"
     print "OPTIONS:"
-    print "\t--pre \"TEXT\"\t\ttext to add before the card number"
     print "\t--start [#]\t\tstarting card number (default: 00)"
     print "\t--end [#]\t\tending card number (default: 08)"
-    print "\t--post \"TEXT\"\t\ttext to add after the card number"
     print ""
 
 
@@ -124,20 +116,17 @@ if __name__ == '__main__':
     pagepos = 0
     cardcount = 0
 
-    for cn in range(cnstart, cnend+1):
-        dmtext = ""
-        dmtext += pretext
-        dmtext +=  str(cn).zfill(2)
-        dmtext += posttext
+    # Prepare the marker dictionary.
+    aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
+    markersize = 60
 
-        DM.write(dmtext, imgfile)
+    for cn in range(cnstart, cnend+1):
+        marker = cv2.cvtColor(aruco.drawMarker(aruco_dict, cn, markersize), cv2.COLOR_GRAY2BGR)
+        marker = cv2.copyMakeBorder(marker, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=[255,255,255])
+        cv2.imwrite(imgfile, marker)
 
         # Trim the image file down.
-        im = Image.open(imgfile)
-        w, h = im.size
-        b = 5
-        im = im.crop((b, b, w-b, h-b))
-        im.save(imgfile)
+
 
         # There seems to be a bug in reportlab.
         # Strings are drawn in the A4 template even though we've set the pagesize to letter.
@@ -162,7 +151,7 @@ if __name__ == '__main__':
             pos = (margin+cwidth*2)*inch, (margin+(2*cheight))*inch
 
 
-        drawCard(pos, dmtext)
+        drawCard(pos, str(cn))
 
         if pagepos >= 8:
             drawTemplateLines()

@@ -46,9 +46,9 @@ class Projector:
             # Prepare the marker dictionary.
             aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
             # Set the marker size and margin.
-            markersize = 60
-            spacer = 60
-            outermargin = 6
+            markersize = 48
+            spacer = 48
+            outermargin = 16
 
             markerid = 0
 
@@ -66,6 +66,7 @@ class Projector:
                     yoffset = yoffset + markersize + spacer
 
                 if (yoffset + markersize) > (self.height - outermargin):
+                    print "calibration marker: 0 - " + str(markerid-1)
                     break
 
                 self.baseimg[yoffset:(yoffset+markersize),xoffset:(xoffset+markersize)] = marker

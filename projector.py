@@ -47,32 +47,38 @@ class Projector:
             aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
             # Set the marker size and margin.
             markersize = 60
-            margin = 6
+            margin = 60
 
-            # Draw the marker and convert it to a color image.
-            marker = cv2.cvtColor(aruco.drawMarker(aruco_dict, 0, markersize), cv2.COLOR_GRAY2BGR)
-            yoffset = self.height - markersize - margin
-            xoffset = margin
-            self.baseimg[yoffset:(markersize+yoffset),xoffset:(markersize+xoffset)] = marker
+            markerid = 0
 
-            marker = cv2.cvtColor(aruco.drawMarker(aruco_dict, 1, markersize), cv2.COLOR_GRAY2BGR)
-            yoffset = self.height - markersize - margin
-            xoffset = self.width - markersize - margin
-            self.baseimg[yoffset:(markersize+yoffset),xoffset:(markersize+xoffset)] = marker
+            yoffset = self.height - (markersize + margin)
+            xoffset = -markersize
 
-            marker = cv2.cvtColor(aruco.drawMarker(aruco_dict, 2, markersize), cv2.COLOR_GRAY2BGR)
-            yoffset = margin
-            xoffset = self.width - markersize - margin
-            self.baseimg[yoffset:(markersize+yoffset),xoffset:(markersize+xoffset)] = marker
+            for markerid in range(0,50):
+                # Draw the marker and convert it to a color image.
+                marker = cv2.cvtColor(aruco.drawMarker(aruco_dict, markerid, markersize), cv2.COLOR_GRAY2BGR)
 
-            marker = cv2.cvtColor(aruco.drawMarker(aruco_dict, 3, markersize), cv2.COLOR_GRAY2BGR)
-            yoffset = margin
-            xoffset = margin
-            self.baseimg[yoffset:(markersize+yoffset),xoffset:(markersize+xoffset)] = marker
+                #calculate markers position
+                xoffset = xoffset + margin + markersize
+                if (xoffset + margin + markersize) > self.width:
+                    xoffset = margin
+                    yoffset = yoffset - (markersize + margin)
+                    if yoffset < margin:
+                        print "yoffset:",yoffset
+                        break
+
+
+
+
+
+
+                self.baseimg[yoffset:(markersize+yoffset),xoffset:(markersize+xoffset)] = marker
+                print "markerid:",markerid
+
 
             self.outputtype = "calibrate"
 
-        self.baseimg = cv2.flip(self.baseimg, 1) # Flip X axis
+        #self.baseimg = cv2.flip(self.baseimg, 1) # Flip X axis
         #self.baseimg = cv2.flip(self.baseimg, 0) # Flip Y axis
         self.outputimg = self.baseimg.copy()
         return

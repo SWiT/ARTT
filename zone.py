@@ -13,7 +13,7 @@ class Zone:
         self.v4l2ucp = -1   # Flag for v4l2ucp sub process
         self.cap = -1        # Capture device object (OpenCV)
         self.resolutions = [(640,480),(1280,720),(1920,1080)]
-        self.ri = 1          # Selected resolution Index
+        self.ri = 2          # Selected resolution Index
         self.srcwidth = 0
         self.srcheight = 0
 

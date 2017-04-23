@@ -136,8 +136,9 @@ class UI:
                     if match:
                         zidx = int(match.group(1))
                         Arena.zones[zidx].projector.flip = not Arena.zones[zidx].projector.flip
-                        Arena.zones[zidx].projector.outputtype = None
+                        Arena.zones[zidx].projector.outputtype = "needscalibration"
                         Arena.zones[zidx].calibrated = False
+                        Arena.zones[zidx].projector.outputCalibrationImage()
                         return
         return
 

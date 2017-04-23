@@ -12,8 +12,8 @@ class Zone:
         self.gridsize = (25, 18) # Grid size to apply to the zone.
         self.v4l2ucp = -1   # Flag for v4l2ucp sub process
         self.cap = -1        # Capture device object (OpenCV)
-        self.resolutions = [(640,480),(1280,720),(1920,1080)]
-        self.ri = 2          # Selected resolution Index
+        self.resolutions = [(1920,1080)] # new calera crashes if resolution is changed
+        self.ri = 0          # Selected resolution Index
         self.srcwidth = 0
         self.srcheight = 0
 
@@ -27,6 +27,9 @@ class Zone:
         self.warpwidth = 0
         self.warpheight = 0
 
+        # Initialize the project for the zone.
+        # Set the projector image height to a little less than the native vertical resolution.
+        # Set the projector image width to the native horizontal resolution.
         self.projector = projector.Projector(570, 800)
         cv2.namedWindow("ZoneProjector"+str(idx), cv2.WND_PROP_FULLSCREEN)
 

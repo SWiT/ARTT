@@ -27,6 +27,7 @@ class UI:
 
         self.videoDevicePattern = re.compile('^videoDevice(\d)$')
         self.recalibratePattern = re.compile('^recalibrate(\d)$')
+        self.flipPattern = re.compile('^flip(\d)$')
 
         self.exit = False
 
@@ -129,6 +130,15 @@ class UI:
                         Arena.cards = dict()
                         Arena.zones[zidx].recalibrate()
                         return
+
+                    # Flip zone projector
+                    match = self.flipPattern.match(self.menurows[rowClicked])
+                    if match:
+                        zidx = int(match.group(1))
+                        Arena.zones[zidx].projector.flip = not Arena.zones[zidx].projector.flip
+                        Arena.zones[zidx].projector.outputtype = None
+                        Arena.zones[zidx].calibrated = False
+                        return
         return
 
     def nextrow(self):
@@ -162,6 +172,10 @@ class UI:
             output = " "+str(z.width)+"x"+str(z.height)
             cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
             self.menurows.append("calibartedres"+str(z.id))
+            self.nextrow()
+            output = " Flip projector: "+str(z.projector.flip)
+            cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
+            self.menurows.append("flip"+str(z.id))
             self.nextrow()
 
         self.menuSpacer()

@@ -8,6 +8,7 @@ class Projector:
     def __init__(self, height, width):
         self.width = width
         self.height = height
+        self.flip = False
         self.outputimg  = None
         self.baseimg    = None
         self.outputtype = None
@@ -66,17 +67,19 @@ class Projector:
                     yoffset = yoffset + markersize + spacer
 
                 if (yoffset + markersize) > (self.height - outermargin):
-                    print "calibration marker: 0 - " + str(markerid-1)
                     break
 
                 self.baseimg[yoffset:(yoffset+markersize),xoffset:(xoffset+markersize)] = marker
 
                 xoffset = xoffset + markersize + spacer
 
+            print "Calibration Markers: 0 - " + str(markerid-1)
 
             self.outputtype = "calibrate"
 
-        #self.baseimg = cv2.flip(self.baseimg, 1) # Flip X axis
-        #self.baseimg = cv2.flip(self.baseimg, 0) # Flip Y axis
+        if self.flip:
+            self.baseimg = cv2.flip(self.baseimg, 1) # Flip X axis
+            #self.baseimg = cv2.flip(self.baseimg, 0) # Flip Y axis
+
         self.outputimg = self.baseimg.copy()
         return

@@ -47,33 +47,30 @@ class Projector:
             aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
             # Set the marker size and margin.
             markersize = 60
-            margin = 60
+            spacer = 60
+            outermargin = 6
 
             markerid = 0
 
-            yoffset = self.height - (markersize + margin)
-            xoffset = -markersize
+            # Calculate the initial marker position.
+            yoffset = outermargin
+            xoffset = outermargin
 
             for markerid in range(0,50):
                 # Draw the marker and convert it to a color image.
                 marker = cv2.cvtColor(aruco.drawMarker(aruco_dict, markerid, markersize), cv2.COLOR_GRAY2BGR)
 
                 #calculate markers position
-                xoffset = xoffset + margin + markersize
-                if (xoffset + margin + markersize) > self.width:
-                    xoffset = margin
-                    yoffset = yoffset - (markersize + margin)
-                    if yoffset < margin:
-                        print "yoffset:",yoffset
-                        break
+                if (xoffset + markersize) > (self.width - outermargin):
+                    xoffset = outermargin
+                    yoffset = yoffset + markersize + spacer
 
+                if (yoffset + markersize) > (self.height - outermargin):
+                    break
 
+                self.baseimg[yoffset:(yoffset+markersize),xoffset:(xoffset+markersize)] = marker
 
-
-
-
-                self.baseimg[yoffset:(markersize+yoffset),xoffset:(markersize+xoffset)] = marker
-                print "markerid:",markerid
+                xoffset = xoffset + markersize + spacer
 
 
             self.outputtype = "calibrate"

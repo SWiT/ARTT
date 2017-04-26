@@ -1,7 +1,7 @@
 import re, os, cv2, time, re
 from numpy import *
 
-import card, zone, ui, dm, procman
+import zone, ui, procman
 import cv2.aruco as aruco
 from utils import *
 
@@ -9,7 +9,7 @@ class Arena:
     def __init__(self):
         self.numzones = 1    #default number of Zones
         self.zones = []
-        self.cards = dict()
+        self.markers = dict()
         self.videodevices = []
 
         self.corners            = None
@@ -29,16 +29,12 @@ class Arena:
         self.buildZones()
 
         self.ui = ui.UI()
+
         self.scantimeout = 1
-        self.dm = dm.DM(1, self.scantimeout)
 
         self.procman = procman.ProcessManager()
 
         return
-
-    def setScanTimeout(self, v):
-        self.scantimeout = v
-        self.dm.setTimeout(self.scantimeout)
 
     def updateNumberOfZones(self):
         self.numzones += 1
@@ -75,30 +71,6 @@ class Arena:
                         symbols = data[1]
                     else:
                         continue
-
-                    # Check that there is only 1 symbol in the results.
-                    if len(symbols) == 1:
-                        content = symbols[0][0]
-                        symbol = symbols[0][1]
-                    else:
-                        continue
-
-                    # Update or Add if it is a card symbol.
-                    match = self.cardPattern.match(content)
-                    if match:
-                        cardid = int(match.group(1))
-                        # Don't update invalid card numbers.
-                        if cardid < card.idmin or card.idmax < cardid :
-                            print cardid,"invalid"
-                            continue
-
-                        # Try to update the card. If it doesn't exist yet, create it.
-                        try:
-                            c = self.cards[cardid]
-                        except KeyError:
-                            c = card.Card(cardid)
-                            self.cards[cardid] = c
-                        c.setData(symbol, z, ts)
 
                 # Remove finished processes from the pool.
                 self.procman.removeFinished()
@@ -187,7 +159,7 @@ class Arena:
                     outputImg = aruco.drawDetectedMarkers(z.image, self.corners)
 
                 # Last known marker locations
-                for cid, c in self.cards.iteritems():
+                for cid, c in self.markers.iteritems():
                     if c.z.id == z.id and c.found:
                         if (time.time() - c.timeseen) > 3:
                             c.found = False

@@ -1,7 +1,7 @@
 import cv2, subprocess
 from numpy import *
 from utils import *
-import corner, projector
+import projector
 
 class Zone:
     used_vdi = []

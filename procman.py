@@ -3,8 +3,8 @@
 # and open the template in the editor.
 import multiprocessing as mp
 import Queue
-
-import dm
+import cv2
+import cv2.aruco as aruco
 
 class ProcessManager:
     def __init__(self):
@@ -12,12 +12,14 @@ class ProcessManager:
         self.maxprocesses = mp.cpu_count()
         self.procpool = []  # Pool of processes
         self.dataque = mp.Queue() # Data waiting to be processed.
-
+        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
+        self.parameters =  aruco.DetectorParameters_create()
 
     def scanSubprocess(self, timestamp, timeout, image, offsetx, offsety, resultsque):
-        dmscanner = dm.DM(1, timeout)
-        dmscanner.scan(image, offsetx = offsetx, offsety = offsety)
-        resultsque.put([timestamp, dmscanner.symbols])
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
+
+        resultsque.put([timestamp, self.corners, self.ids, self.rejectedImgPoints])
         resultsque.close()
 
 

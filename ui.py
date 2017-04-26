@@ -208,8 +208,8 @@ class UI:
 
         self.menuSpacer()
 
-        # Draw card statuses and settings
-        for k, c in Arena.cards.iteritems():
+        # Draw marker statuses and settings
+        for k, c in Arena.markers.iteritems():
             output = str(c.id)+":"
             output += ' Z'+str(c.z.id)
             output += ' '+str(c.locArena)

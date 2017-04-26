@@ -7,7 +7,8 @@ if __name__ == '__main__':
     ###############
     ## SETUP
     ###############
-    print "Augmented Reality Table Top";
+    print "SWiT's Augmented Reality Table Top";
+    print "**********************************";
     cv2.namedWindow("ArenaScanner")
     cv2.namedWindow("ArenaControlPanel")
     cv2.startWindowThread()

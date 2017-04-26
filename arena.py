@@ -129,35 +129,13 @@ class Arena:
                 gray = cv2.cvtColor(z.image, cv2.COLOR_BGR2GRAY)
                 aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
                 parameters =  aruco.DetectorParameters_create()
-                #print(parameters)
                 corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
                 #print(corners)
                 #print(ids)
-                gray = aruco.drawDetectedMarkers(gray, corners)
                 z.image = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-
-                # Scan each unfound corner's region of interst
-#                calibrated = True
-#                for c in z.corners:
-#                    if not c.found:
-#                        calibrated = False
-#                        # Scan the roi
-#                        roi = z.image[c.roiymin:c.roiymax, c.roixmin:c.roixmax]
-#                        self.dm.scan(roi, offsetx = c.roixmin, offsety = c.roiymin)
-#                        # For each detected DataMatrix symbol, Should be only 1.
-#                        for content,symbol in self.dm.symbols:
-#                            # Blank the region of the image where the symbol was found.
-#                            poly = array(symbol, int32)
-#                            cv2.fillConvexPoly(z.image, poly, (255,255,255))
-#
-#                            # Check if zone corner
-#                            match = self.cornerPattern.match(content)
-#                            if match:
-#                                # Update the corners position.
-#                                cid = int(match.group(1))
-#                                z.corners[cid].setData(symbol)
-#
-#                z.calibrated = calibrated
+                z.image = aruco.drawDetectedMarkers(z.image, corners)
+                #z.calibrated = True
+                #TODO: What defines calibrated now?
 
         #End of zone loop
         return

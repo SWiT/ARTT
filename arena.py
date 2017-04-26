@@ -192,7 +192,12 @@ class Arena:
 
                 # Zone edges
                 if not z.calibrated:
-                    outputImg = aruco.drawDetectedMarkers(z.image, self.corners)
+                    # Convert the markers dict to the data structure of self.corners
+                    markerlist = []
+                    for key, value in self.markers.iteritems():
+                        markerlist.append(array([value]))
+                    # Draw the markers
+                    outputImg = aruco.drawDetectedMarkers(z.image, markerlist)
 
                 # Last known marker locations
 #                for cid, c in self.markers.iteritems():

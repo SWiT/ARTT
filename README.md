@@ -1,7 +1,6 @@
-# ARTT
- An Augmented Reality Table Top using a projector and webcam.
+# SWiT ARTT
+ https://github.com/SWiT/ARTT/
 
-Migrating to OpenCV 3.2.0 and Aruco symbols
+ An Augmented Reality Table Top using sanded clear acrylic, mirrors, projectors, and cameras.
 
-TODO: too much to list
-
+TODO: Migrating to OpenCV 3.2.0 and Aruco symbols.

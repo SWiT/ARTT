@@ -128,6 +128,7 @@ class UI:
                     if match:
                         zidx = int(match.group(1))
                         Arena.markers = dict()
+                        Arena.markerfoundcount = dict()
                         Arena.zones[zidx].recalibrate()
                         return
 

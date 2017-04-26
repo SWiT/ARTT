@@ -9,8 +9,11 @@ class Arena:
     def __init__(self):
         self.numzones = 1    #default number of Zones
         self.zones = []
-        self.markers = dict()
         self.videodevices = []
+
+        self.markers = dict()
+        self.markerfoundcount = dict()
+        self.markerfoundmin = 20
 
         self.corners            = []
         self.ids                = []
@@ -100,15 +103,20 @@ class Arena:
 
             # If the zone is not calibrated
             else:
-
+                #Convert image to grayscale and detect markers.
                 gray = cv2.cvtColor(z.image, cv2.COLOR_BGR2GRAY)
                 self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
+
                 if self.ids is not None:
                     for index,foundid in enumerate(self.ids):
                         markerid = foundid[0] # I have no idea why the ids are a 2 dimensional list.
                         if markerid not in self.markers:
                             self.markers[markerid] = self.corners[index][0]
+                            self.markerfoundcount[markerid] = 1
                         else:
+                            if self.markerfoundcount[markerid] < self.markerfoundmin:
+                                self.markerfoundcount[markerid] += 1
+
                             #If the upper left corner's Y value is less than the existing value use it instead.
                             if self.corners[index][0][0][0] < self.markers[markerid][0][0]:
                                 self.markers[markerid][0][0] = self.corners[index][0][0][0]
@@ -138,9 +146,15 @@ class Arena:
                                 self.markers[markerid][3][1] = self.corners[index][0][3][1]
 
                 # Calibration is complete when all calibration markers have been seen at least X times
-                #self.markers # Markers that have been found.
-                #z.projector.maxcalmarkerid
-                #z.calibrated = True
+                cal = True
+                if len(self.markers)-1 == z.projector.maxcalmarkerid:
+                    for idx in range(0,z.projector.maxcalmarkerid+1):
+                        if self.markerfoundcount[markerid] < self.markerfoundmin:
+                            cal = False
+                else:
+                    cal = False
+                print cal
+                #z.calibrated = cal
 
         #End of zone loop
         return
@@ -199,18 +213,6 @@ class Arena:
                     # Draw the markers
                     outputImg = aruco.drawDetectedMarkers(z.image, markerlist)
 
-                # Last known marker locations
-#                for cid, c in self.markers.iteritems():
-#                    if c.z.id == z.id and c.found:
-#                        if (time.time() - c.timeseen) > 3:
-#                            c.found = False
-#                            continue
-#
-#                        c.drawRoi(img)
-#
-#                        c.draw(z.projector.outputimg)
-#                        c.drawRoi(z.projector.outputimg)
-#                        c.drawAugText(z.projector.outputimg)
 
                 if self.ui.displayAll():
                     outputImg[0:z.height, z.id*z.width:(z.id+1)*z.width] = img

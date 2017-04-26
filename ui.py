@@ -127,7 +127,7 @@ class UI:
                     match = self.recalibratePattern.match(self.menurows[rowClicked])
                     if match:
                         zidx = int(match.group(1))
-                        Arena.cards = dict()
+                        Arena.markers = dict()
                         Arena.zones[zidx].recalibrate()
                         return
 

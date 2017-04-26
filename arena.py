@@ -77,10 +77,10 @@ class Arena:
                 # Remove finished processes from the pool.
                 self.procman.removeFinished()
 
-                # Scan for all known cards.
-                for cid, c in self.cards.iteritems():
-                    roi = z.image[c.roiminy:c.roimaxy, c.roiminx:c.roimaxx]
-                    self.procman.addProcess(timestamp, self.scantimeout, roi, c.roiminx, c.roiminy)
+                # Scan for all known markers.
+                #for marker in self.markers.iteritems():
+                    #roi = z.image[c.roiminy:c.roimaxy, c.roiminx:c.roimaxx]
+                    #self.procman.addProcess(timestamp, self.scantimeout, roi, c.roiminx, c.roiminy)
 
                     # Blank the region of the image where the symbol was last seen.
                     # Remove jitter by no includeing symbol[2]
@@ -89,10 +89,10 @@ class Arena:
                     #s = np.delete()
                     #print c.symbol
                     #print s,"\n"
-                    poly = array(c.symbol, int32)
-                    cv2.fillConvexPoly(z.image, poly, (255,255,255))
-                    cv2.putText(z.image, str(c.id), (c.location[0]-8, c.location[1]+8), cv2.FONT_HERSHEY_PLAIN, 1.5, c.color_augtext, 2)
 
+                    #poly = array(c.symbol, int32)
+                    #cv2.fillConvexPoly(z.image, poly, (255,255,255))
+                    #cv2.putText(z.image, str(c.id), (c.location[0]-8, c.location[1]+8), cv2.FONT_HERSHEY_PLAIN, 1.5, c.color_augtext, 2)
 
                 # Scan for a new symbol.
                 self.procman.addProcess(timestamp, self.scantimeout, z.image)
@@ -103,22 +103,40 @@ class Arena:
 
                 gray = cv2.cvtColor(z.image, cv2.COLOR_BGR2GRAY)
                 self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
-                #if len(self.corners) > 0:
-                #    print
-                #    print self.corners[0]
-                #    print self.ids[0]
-                if self.ids != None:
-                    print self.ids
-                    for foundid in self.ids:
-                        markerid = foundid[0]
-                        print
-                        print markerid
-                        self.markers[markerid] = "Found"
-                        print self.markers
-                        print len(self.markers)
-                        #if markerid not in self.markers:
+                if self.ids is not None:
+                    for index,foundid in enumerate(self.ids):
+                        markerid = foundid[0] # I have no idea why the ids are a 2 dimensional list.
+                        if markerid not in self.markers:
+                            self.markers[markerid] = self.corners[index][0]
+                        else:
+                            #If the upper left corner's Y value is less than the existing value use it instead.
+                            if self.corners[index][0][0][0] < self.markers[markerid][0][0]:
+                                self.markers[markerid][0][0] = self.corners[index][0][0][0]
+                            #If the upper left corner's X value is less than the existing value use it instead.
+                            if self.corners[index][0][0][1] < self.markers[markerid][0][1]:
+                                self.markers[markerid][0][1] = self.corners[index][0][0][1]
 
-                        #    self.markers[markerid] = "Found"
+                            #If the lower left corner's Y value is greater than the existing value use it instead.
+                            if self.corners[index][0][1][0] > self.markers[markerid][1][0]:
+                                self.markers[markerid][1][0] = self.corners[index][0][1][0]
+                            #If the lower left corner's X value is less than the existing value use it instead.
+                            if self.corners[index][0][1][1] < self.markers[markerid][1][1]:
+                                self.markers[markerid][1][1] = self.corners[index][0][1][1]
+
+                            #If the lower right corner's Y value is greater than the existing value use it instead.
+                            if self.corners[index][0][2][0] > self.markers[markerid][2][0]:
+                                self.markers[markerid][2][0] = self.corners[index][0][2][0]
+                            #If the lower right corner's X value is greater than the existing value use it instead.
+                            if self.corners[index][0][2][1] > self.markers[markerid][2][1]:
+                                self.markers[markerid][2][1] = self.corners[index][0][2][1]
+
+                            #If the upper right corner's Y value is less than the existing value use it instead.
+                            if self.corners[index][0][3][0] < self.markers[markerid][3][0]:
+                                self.markers[markerid][3][0] = self.corners[index][0][3][0]
+                            #If the upper right corner's X value is greater that the existing value use it instead.
+                            if self.corners[index][0][3][1] > self.markers[markerid][3][1]:
+                                self.markers[markerid][3][1] = self.corners[index][0][3][1]
+
                 # Calibration is complete when all calibration markers have been seen at least X times
                 #self.markers # Markers that have been found.
                 #z.projector.maxcalmarkerid

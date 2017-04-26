@@ -153,7 +153,7 @@ class Arena:
         elif size(self.zones) > 0:
             outputImg = zeros((self.zones[self.ui.display].height, self.zones[self.ui.display].width, 3), uint8)
         else:
-            outputImg = zeros((720, 1280, 3), uint8)
+            outputImg = zeros((1080, 1920, 3), uint8)
 
         for z in self.zones:
             if z.calibrated:

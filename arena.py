@@ -12,8 +12,9 @@ class Arena:
         self.cards = dict()
         self.videodevices = []
 
-        self.cardPattern = re.compile('^(\d{2})$')
-        self.cornerPattern = re.compile('^C(\d)$')
+        self.corners            = None
+        self.ids                = None
+        self.rejectedImgPoints  = None
 
         #Get lists of video devices
         video_pattern = re.compile('^video(\d)$')
@@ -129,11 +130,7 @@ class Arena:
                 gray = cv2.cvtColor(z.image, cv2.COLOR_BGR2GRAY)
                 aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
                 parameters =  aruco.DetectorParameters_create()
-                corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
-                #print(corners)
-                #print(ids)
-                z.image = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-                z.image = aruco.drawDetectedMarkers(z.image, corners)
+                self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
                 #z.calibrated = True
                 #TODO: What defines calibrated now?
 
@@ -158,6 +155,8 @@ class Arena:
         for z in self.zones:
             if z.calibrated:
                 z.projector.outputArenaImage()
+            else:
+                z.projector.outputCalibrationImage()
 
             if self.ui.isDisplayed(z.id):
                 # Prepare image based on display mode.
@@ -185,16 +184,9 @@ class Arena:
 
                 # Zone edges
                 if not z.calibrated:
-                    corner_pts = []
-                    for c in z.corners:
-                        corner_pts.append(c.location)
-                        if c.found:
-                            drawBorder(img, c.symbol, self.ui.COLOR_BLUE, 1)
-                            pt = (c.symbolcenter[0]-5, c.symbolcenter[1]+5)
-                            cv2.putText(img, str(c.idx), pt, cv2.FONT_HERSHEY_PLAIN, 1.5, self.ui.COLOR_BLUE, 2)
-                    drawBorder(img, corner_pts, self.ui.COLOR_BLUE, 1)
+                    outputImg = aruco.drawDetectedMarkers(z.image, self.corners)
 
-                # Last known card locations
+                # Last known marker locations
                 for cid, c in self.cards.iteritems():
                     if c.z.id == z.id and c.found:
                         if (time.time() - c.timeseen) > 3:

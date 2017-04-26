@@ -219,17 +219,9 @@ class UI:
             self.menurows.append("card"+str(c.id))
             self.nextrow()
 
-        self.menuSpacer()
 
-        # Draw zone corner statuses
+        # Draw zone settings
         for z in Arena.zones:
-            for c in z.corners:
-                output = "Z"+str(z.id)+" C"+str(c.idx)+":"
-                #output += ' '+str(int(round((time.time()-c.time)*1000,0)))
-                output += ' ' + str(c.found)
-                cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
-                self.menurows.append("z"+str(z.id)+"c"+str(c.idx))
-                self.nextrow()
             # Draw the recalibrate button
             output = "Recalibrate Z"+str(z.id)
             cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)

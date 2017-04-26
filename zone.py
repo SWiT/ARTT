@@ -35,12 +35,6 @@ class Zone:
 
         self.initVideoDevice()
 
-        # Add the corners.
-        self.corners = []
-        self.corners.append(corner.Corner(self, 0))
-        self.corners.append(corner.Corner(self, 1))
-        self.corners.append(corner.Corner(self, 2))
-        self.corners.append(corner.Corner(self, 3))
         self.calibrated = False
 
         return

@@ -15,6 +15,8 @@ class Arena:
         self.corners            = None
         self.ids                = None
         self.rejectedImgPoints  = None
+        self.aruco_dict         = aruco.Dictionary_get(aruco.DICT_4X4_50)
+        self.parameters         = aruco.DetectorParameters_create()
 
         #Get lists of video devices
         video_pattern = re.compile('^video(\d)$')
@@ -100,11 +102,11 @@ class Arena:
             else:
 
                 gray = cv2.cvtColor(z.image, cv2.COLOR_BGR2GRAY)
-                aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
-                parameters =  aruco.DetectorParameters_create()
-                self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
+                self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
+                # Calibration in complete when all calibration markers have been seen at least 10 times
+                #self.markers # Markers that have been found.
+                #z.projector.maxcalmarkerid
                 #z.calibrated = True
-                #TODO: What defines calibrated now?
 
         #End of zone loop
         return

@@ -12,8 +12,15 @@ class Projector:
         self.baseimg        = None  # Base map texture on top of which output is drawn.
         self.calibrationimg = None  # The calibration image for lens adjustments.
         self.outputimg      = None  # The image being output by the projector.
-        self.maxcalmarker   = None  # Maximum marker id used by the calibration image
+        self.maxcalmarkerid = None  # Maximum marker id used by the calibration image
         self.outputtype     = None  # Type of output (zone, calibration)
+
+        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)   # Prepare the marker dictionary.
+        # Set the marker size and margin.
+        self.markersize = 48
+        self.spacer = 48
+        self.outermargin = 16
+        self.calibrationpoints = None
 
         self.renderZoneImage()
         self.renderCalibrationImage()
@@ -48,36 +55,30 @@ class Projector:
         self.calibrationimg = zeros((self.height,self.width,3), uint8)
         self.calibrationimg[:,:] = (255,255,255)
 
-        # Prepare the marker dictionary.
-        aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
-        # Set the marker size and margin.
-        markersize = 48
-        spacer = 48
-        outermargin = 16
 
         # Calculate the initial marker position.
-        yoffset = outermargin
-        xoffset = outermargin
+        yoffset = self.outermargin
+        xoffset = self.outermargin
 
         markerid = 0
         for markerid in range(0,50):
             # Draw the marker and convert it to a color image.
-            marker = cv2.cvtColor(aruco.drawMarker(aruco_dict, markerid, markersize), cv2.COLOR_GRAY2BGR)
+            marker = cv2.cvtColor(aruco.drawMarker(self.aruco_dict, markerid, self.markersize), cv2.COLOR_GRAY2BGR)
 
             #calculate markers position
-            if (xoffset + markersize) > (self.width - outermargin):
-                xoffset = outermargin
-                yoffset = yoffset + markersize + spacer
+            if (xoffset + self.markersize) > (self.width - self.outermargin):
+                xoffset = self.outermargin
+                yoffset = yoffset + self.markersize + self.spacer
 
-            if (yoffset + markersize) > (self.height - outermargin):
+            if (yoffset + self.markersize) > (self.height - self.outermargin):
                 markerid -= 1
                 break
 
-            self.calibrationimg[yoffset:(yoffset+markersize),xoffset:(xoffset+markersize)] = marker
-            xoffset = xoffset + markersize + spacer
+            self.calibrationimg[yoffset:(yoffset+self.markersize),xoffset:(xoffset+self.markersize)] = marker
+            xoffset = xoffset + self.markersize + self.spacer
 
-        self.maxcalmarker = markerid
-        print "Calibration Markers: 0 - " + str(self.maxcalmarker)
+        self.maxcalmarkerid = markerid
+        print "Calibration Markers: 0 - " + str(self.maxcalmarkerid)
 
         if self.flip:
             self.calibrationimg = cv2.flip(self.calibrationimg, 1) # Flip X axis

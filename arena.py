@@ -12,9 +12,9 @@ class Arena:
         self.markers = dict()
         self.videodevices = []
 
-        self.corners            = None
-        self.ids                = None
-        self.rejectedImgPoints  = None
+        self.corners            = []
+        self.ids                = []
+        self.rejectedImgPoints  = []
         self.aruco_dict         = aruco.Dictionary_get(aruco.DICT_4X4_50)
         self.parameters         = aruco.DetectorParameters_create()
 
@@ -103,7 +103,23 @@ class Arena:
 
                 gray = cv2.cvtColor(z.image, cv2.COLOR_BGR2GRAY)
                 self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
-                # Calibration in complete when all calibration markers have been seen at least 10 times
+                #if len(self.corners) > 0:
+                #    print
+                #    print self.corners[0]
+                #    print self.ids[0]
+                if self.ids != None:
+                    print self.ids
+                    for foundid in self.ids:
+                        markerid = foundid[0]
+                        print
+                        print markerid
+                        self.markers[markerid] = "Found"
+                        print self.markers
+                        print len(self.markers)
+                        #if markerid not in self.markers:
+
+                        #    self.markers[markerid] = "Found"
+                # Calibration is complete when all calibration markers have been seen at least X times
                 #self.markers # Markers that have been found.
                 #z.projector.maxcalmarkerid
                 #z.calibrated = True
@@ -161,17 +177,17 @@ class Arena:
                     outputImg = aruco.drawDetectedMarkers(z.image, self.corners)
 
                 # Last known marker locations
-                for cid, c in self.markers.iteritems():
-                    if c.z.id == z.id and c.found:
-                        if (time.time() - c.timeseen) > 3:
-                            c.found = False
-                            continue
-
-                        c.drawRoi(img)
-
-                        c.draw(z.projector.outputimg)
-                        c.drawRoi(z.projector.outputimg)
-                        c.drawAugText(z.projector.outputimg)
+#                for cid, c in self.markers.iteritems():
+#                    if c.z.id == z.id and c.found:
+#                        if (time.time() - c.timeseen) > 3:
+#                            c.found = False
+#                            continue
+#
+#                        c.drawRoi(img)
+#
+#                        c.draw(z.projector.outputimg)
+#                        c.drawRoi(z.projector.outputimg)
+#                        c.drawAugText(z.projector.outputimg)
 
                 if self.ui.displayAll():
                     outputImg[0:z.height, z.id*z.width:(z.id+1)*z.width] = img

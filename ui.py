@@ -209,15 +209,15 @@ class UI:
         self.menuSpacer()
 
         # Draw marker statuses and settings
-        for k, c in Arena.markers.iteritems():
-            output = str(c.id)+":"
-            output += ' Z'+str(c.z.id)
-            output += ' '+str(c.locArena)
-            output += ' '+str(c.heading)
-            output += ' '+str(int(round((time.time()-c.timeseen),0)))
-            cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
-            self.menurows.append("card"+str(c.id))
-            self.nextrow()
+#        for k, c in Arena.markers.iteritems():
+#            output = str(c.id)+":"
+#            output += ' Z'+str(c.z.id)
+#            output += ' '+str(c.locArena)
+#            output += ' '+str(c.heading)
+#            output += ' '+str(int(round((time.time()-c.timeseen),0)))
+#            cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
+#            self.menurows.append("card"+str(c.id))
+#            self.nextrow()
 
 
         # Draw zone settings

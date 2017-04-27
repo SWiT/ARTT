@@ -5,7 +5,8 @@ import projector
 
 class Zone:
     used_vdi = []
-    def __init__(self, idx, videodevices):
+    def __init__(self, idx, videodevices, arena):
+        self.arena = arena
         self.id = idx   # Zone ID
         self.vdi = idx  # Video ID
         self.videodevices = videodevices    # list of video devices
@@ -137,21 +138,22 @@ class Zone:
 
     def warpImage(self):
         # Prepare the transform if not done already.
-        if self.M is None:
-            self.warpwidth = self.projector.width
-            self.warpheight = self.projector.height
-
-            pts1 = float32([self.corners[0].location, self.corners[1].location, self.corners[2].location, self.corners[3].location])
-            pts2 = float32([[0,self.warpheight],[self.warpwidth,self.warpheight],[self.warpwidth,0],[0,0]])
-            self.M = cv2.getPerspectiveTransform(pts1, pts2)
+        print self.arena.markerlist
+#        if self.M is None:
+#            self.warpwidth = self.projector.width
+#            self.warpheight = self.projector.height
+#
+#            pts1 = float32([self.corners[0].location, self.corners[1].location, self.corners[2].location, self.corners[3].location])
+#            pts2 = float32([[0,self.warpheight],[self.warpwidth,self.warpheight],[self.warpwidth,0],[0,0]])
+#            self.M = cv2.getPerspectiveTransform(pts1, pts2)
 
         # Warp the image to be the optimal size
-        warpedimage = zeros((self.warpheight, self.warpwidth, 3), uint8)
-        dsize = (self.warpwidth, self.warpheight)
-        cv2.warpPerspective(self.image, self.M, dsize, dst=warpedimage, borderMode=cv2.BORDER_TRANSPARENT)
-        self.image = warpedimage
-        self.height,self.width,self.depth = self.image.shape
-        self.warped = True
+#        warpedimage = zeros((self.warpheight, self.warpwidth, 3), uint8)
+#        dsize = (self.warpwidth, self.warpheight)
+#        cv2.warpPerspective(self.image, self.M, dsize, dst=warpedimage, borderMode=cv2.BORDER_TRANSPARENT)
+#        self.image = warpedimage
+#        self.height,self.width,self.depth = self.image.shape
+#        self.warped = True
         return
 
 

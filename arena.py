@@ -12,6 +12,7 @@ class Arena:
         self.videodevices = []
 
         self.markers = dict()
+        self.markerlist = []
         self.markerfoundcount = dict()
         self.markerfoundmin = 20
 
@@ -54,7 +55,7 @@ class Arena:
             z.used_vdi = []
         self.zones = []
         for idx in range(0,self.numzones):
-            self.zones.append(zone.Zone(idx, self.videodevices))
+            self.zones.append(zone.Zone(idx, self.videodevices, self))
 
 
     def scan(self):
@@ -69,36 +70,36 @@ class Arena:
                 z.warpImage()
 
                 # Handle any returned symbol data.
-                while self.procman.resultsAvailable():
-                    data = self.procman.getResult()
-                    if len(data) == 2:
-                        ts = data[0]    # timestamp
-                        symbols = data[1]
-                    else:
-                        continue
-
-                # Remove finished processes from the pool.
-                self.procman.removeFinished()
-
-                # Scan for all known markers.
-                #for marker in self.markers.iteritems():
-                    #roi = z.image[c.roiminy:c.roimaxy, c.roiminx:c.roimaxx]
-                    #self.procman.addProcess(timestamp, self.scantimeout, roi, c.roiminx, c.roiminy)
-
-                    # Blank the region of the image where the symbol was last seen.
-                    # Remove jitter by no includeing symbol[2]
-                    #s = copy(c.symbol)
-                    #s.pop(2)
-                    #s = np.delete()
-                    #print c.symbol
-                    #print s,"\n"
-
-                    #poly = array(c.symbol, int32)
-                    #cv2.fillConvexPoly(z.image, poly, (255,255,255))
-                    #cv2.putText(z.image, str(c.id), (c.location[0]-8, c.location[1]+8), cv2.FONT_HERSHEY_PLAIN, 1.5, c.color_augtext, 2)
-
-                # Scan for a new symbol.
-                self.procman.addProcess(timestamp, self.scantimeout, z.image)
+#                while self.procman.resultsAvailable():
+#                    data = self.procman.getResult()
+#                    if len(data) == 2:
+#                        ts = data[0]    # timestamp
+#                        symbols = data[1]
+#                    else:
+#                        continue
+#
+#                # Remove finished processes from the pool.
+#                self.procman.removeFinished()
+#
+#                # Scan for all known markers.
+#                #for marker in self.markers.iteritems():
+#                    #roi = z.image[c.roiminy:c.roimaxy, c.roiminx:c.roimaxx]
+#                    #self.procman.addProcess(timestamp, self.scantimeout, roi, c.roiminx, c.roiminy)
+#
+#                    # Blank the region of the image where the symbol was last seen.
+#                    # Remove jitter by no includeing symbol[2]
+#                    #s = copy(c.symbol)
+#                    #s.pop(2)
+#                    #s = np.delete()
+#                    #print c.symbol
+#                    #print s,"\n"
+#
+#                    #poly = array(c.symbol, int32)
+#                    #cv2.fillConvexPoly(z.image, poly, (255,255,255))
+#                    #cv2.putText(z.image, str(c.id), (c.location[0]-8, c.location[1]+8), cv2.FONT_HERSHEY_PLAIN, 1.5, c.color_augtext, 2)
+#
+#                # Scan for a new symbol.
+#                self.procman.addProcess(timestamp, self.scantimeout, z.image)
 
 
             # If the zone is not calibrated
@@ -146,15 +147,21 @@ class Arena:
                                 self.markers[markerid][3][1] = self.corners[index][0][3][1]
 
                 # Calibration is complete when all calibration markers have been seen at least X times
-                cal = True
+                calibrated = True
                 if len(self.markers)-1 == z.projector.maxcalmarkerid:
                     for idx in range(0,z.projector.maxcalmarkerid+1):
                         if self.markerfoundcount[markerid] < self.markerfoundmin:
-                            cal = False
+                            calibrated = False
+                            break
                 else:
-                    cal = False
-                print cal
-                #z.calibrated = cal
+                    calibrated = False
+                z.calibrated = calibrated
+                if z.calibrated:
+                    # Convert the markers dict to the data structure of self.corners
+                    self.markerlist = []
+                    for key, value in self.markers.iteritems():
+                        self.markerlist.append(array([value]))
+
 
         #End of zone loop
         return
@@ -176,7 +183,8 @@ class Arena:
 
         for z in self.zones:
             if z.calibrated:
-                z.projector.outputArenaImage()
+                #z.projector.outputZoneImage()
+                z.projector.outputCalibrationImage()
             else:
                 z.projector.outputCalibrationImage()
 
@@ -204,14 +212,8 @@ class Arena:
                 pt1 = (z.width/2+5, z.height/2)
                 cv2.line(img, pt0, pt1, self.ui.COLOR_PURPLE, 1)
 
-                # Zone edges
-                if not z.calibrated:
-                    # Convert the markers dict to the data structure of self.corners
-                    markerlist = []
-                    for key, value in self.markers.iteritems():
-                        markerlist.append(array([value]))
-                    # Draw the markers
-                    outputImg = aruco.drawDetectedMarkers(z.image, markerlist)
+                # Draw the markers
+                outputImg = aruco.drawDetectedMarkers(z.image, self.markerlist)
 
 
                 if self.ui.displayAll():

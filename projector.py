@@ -51,6 +51,12 @@ class Projector:
         return self.outputimg
 
     def renderCalibrationImage(self):
+
+#        board = cv2.aruco.CharucoBoard_create(8,6,.025,.0125, self.aruco_dict)
+#        self.calibrationimg = board.draw((800,600),marginSize=25)
+#        cv2.imwrite('images/charuco.png',img)
+#        return
+
         # Create an empty white image.
         self.calibrationimg = zeros((self.height,self.width,3), uint8)
         self.calibrationimg[:,:] = (255,255,255)

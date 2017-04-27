@@ -16,11 +16,14 @@ class Projector:
         self.outputtype     = None  # Type of output (zone, calibration)
 
         self.aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)   # Prepare the marker dictionary.
+
         # Set the marker size and margin.
         self.markersize = 48
         self.spacer = 48
         self.outermargin = 16
-        self.calibrationpoints = None
+        self.rows = 0
+        self.cols = 0
+        self.calibrationpoints = []
 
         self.renderZoneImage()
         self.renderCalibrationImage()
@@ -52,10 +55,14 @@ class Projector:
 
     def renderCalibrationImage(self):
 
-#        board = cv2.aruco.CharucoBoard_create(8,6,.025,.0125, self.aruco_dict)
-#        self.calibrationimg = board.draw((800,600),marginSize=25)
-#        cv2.imwrite('images/charuco.png',img)
-#        return
+        board = cv2.aruco.CharucoBoard_create(8,6,96,48, self.aruco_dict)
+        self.calibrationimg = board.draw((800,600),marginSize=30)
+        cv2.imwrite('calibration_charuco.png', self.calibrationimg)
+
+        if self.flip:
+            self.calibrationimg = cv2.flip(self.calibrationimg, 1) # Flip X axis
+
+        return
 
         # Create an empty white image.
         self.calibrationimg = zeros((self.height,self.width,3), uint8)
@@ -75,6 +82,7 @@ class Projector:
             if (xoffset + self.markersize) > (self.width - self.outermargin):
                 xoffset = self.outermargin
                 yoffset = yoffset + self.markersize + self.spacer
+                self.rows += 1
 
             if (yoffset + self.markersize) > (self.height - self.outermargin):
                 markerid -= 1
@@ -82,6 +90,14 @@ class Projector:
 
             self.calibrationimg[yoffset:(yoffset+self.markersize),xoffset:(xoffset+self.markersize)] = marker
             xoffset = xoffset + self.markersize + self.spacer
+            self.cols += 1
+
+        self.cols = self.cols/self.rows
+        print self.cols,'x',self.rows
+
+        # Calculate calibration points
+        #self.calibrationpoints.append()
+
 
         self.maxcalmarkerid = markerid
         print "Calibration Markers: 0 - " + str(self.maxcalmarkerid)

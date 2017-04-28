@@ -12,7 +12,6 @@ class Arena:
         self.videodevices = []
 
         self.markers = dict()
-        self.markerlist = []
         self.markerfoundcount = dict()
         self.calibrationMin = 10
         self.calibrationCorners = []
@@ -142,19 +141,11 @@ class Arena:
                 else:
                     ready = False
 
-#                if len(self.calibrationCorners) != len(self.calibrationIds):
-#                    ready = False
-
                 if ready:
-                    # Convert the markers dict to the data structure of self.corners
-                    self.markerlist = []
-                    for key, value in self.markers.iteritems():
-                        self.markerlist.append(array([value]))
-
                     #Capture frames to use the in camera calibration
                     print "Calibrating..."
                     try:
-                        retval, cameraMatrix, distCoeffs, rvecs, tvecs = cv2.aruco.calibrateCameraCharuco(self.calibrationCorners, self.calibrationIds, z.projector.board, gray.shape,None,None)
+                        retval, z.cameraMatrix, z.distCoefs, z.rvecs, z.tvecs = cv2.aruco.calibrateCameraCharuco(self.calibrationCorners, self.calibrationIds, z.projector.board, gray.shape,None,None)
                         #print(retval, cameraMatrix, distCoeffs, rvecs, tvecs)
                         print "Calibration successful"
                     except:
@@ -213,7 +204,8 @@ class Arena:
                 cv2.line(img, pt0, pt1, self.ui.COLOR_PURPLE, 1)
 
                 # Draw the markers
-                outputImg = aruco.drawDetectedMarkers(z.image, self.markerlist)
+                if not z.calibrated:
+                    outputImg = aruco.drawDetectedMarkers(z.image, self.corners)
 
 
                 if self.ui.displayAll():

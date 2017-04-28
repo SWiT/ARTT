@@ -23,8 +23,11 @@ class Zone:
         self.height = 0
         self.depth = 0
 
+        self.cameraMatrix = None
+        self.distCoefs = None
+        self.rvecs = None
+        self.tvecs = None
         self.warped = False
-        self.M = None  # Perspective Transform
         self.warpwidth = 0
         self.warpheight = 0
 
@@ -136,15 +139,27 @@ class Zone:
         return
 
     def warpImage(self):
-        # Prepare the transform if not done already.
-        #print("undistort the frame")
-#        if self.M is None:
-#            self.warpwidth = self.projector.width
-#            self.warpheight = self.projector.height
-#
-#            pts1 = float32([self.corners[0].location, self.corners[1].location, self.corners[2].location, self.corners[3].location])
-#            pts2 = float32([[0,self.warpheight],[self.warpwidth,self.warpheight],[self.warpwidth,0],[0,0]])
-#            self.M = cv2.getPerspectiveTransform(pts1, pts2)
+        # Undistort the frame
+
+        #img = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+        img = self.image
+        h,  w = img.shape[:2]
+        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(self.cameraMatrix, self.distCoefs, (w, h), 1, (w, h))
+        dst = cv2.undistort(img, self.cameraMatrix, self.distCoefs, None, newcameramtx)
+        self.image = dst
+        print "roi:", roi
+
+        # crop the image
+
+#        x, y, w, h = roi
+#        dst = dst[y:y+h, x:x+w]
+#        self.image  = dst
+#        self.height = h
+#        self.width  = w
+
+        #self.image  = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
+#        if self.image is not None:
+#            self.height, self.width, self.depth = self.image.shape
 
         # Warp the image to be the optimal size
 #        warpedimage = zeros((self.warpheight, self.warpwidth, 3), uint8)

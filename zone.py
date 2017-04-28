@@ -31,7 +31,7 @@ class Zone:
         # Initialize the project for the zone.
         # Set the projector image height to a little less than the native vertical resolution.
         # Set the projector image width to the native horizontal resolution.
-        self.projector = projector.Projector(570, 800)
+        self.projector = projector.Projector(600, 800)
         cv2.namedWindow("ZoneProjector"+str(idx), cv2.WND_PROP_FULLSCREEN)
 
         self.initVideoDevice()
@@ -138,7 +138,7 @@ class Zone:
 
     def warpImage(self):
         # Prepare the transform if not done already.
-        print self.arena.markerlist
+        print "calibrate!!!"
 #        if self.M is None:
 #            self.warpwidth = self.projector.width
 #            self.warpheight = self.projector.height

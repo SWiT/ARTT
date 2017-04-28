@@ -150,7 +150,7 @@ class Arena:
                 calibrated = True
                 if len(self.markers)-1 == z.projector.maxcalmarkerid:
                     for idx in range(0,z.projector.maxcalmarkerid+1):
-                        if self.markerfoundcount[markerid] < self.markerfoundmin:
+                        if self.markerfoundcount[idx] < self.markerfoundmin:
                             calibrated = False
                             break
                 else:

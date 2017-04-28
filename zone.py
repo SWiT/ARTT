@@ -42,7 +42,6 @@ class Zone:
 
     def recalibrate(self):
         self.calibrated = False
-        self.M = None
         self.projector.outputCalibrationImage()
         return
 
@@ -138,7 +137,7 @@ class Zone:
 
     def warpImage(self):
         # Prepare the transform if not done already.
-        print "calibrate!!!"
+        print("undistort the frame")
 #        if self.M is None:
 #            self.warpwidth = self.projector.width
 #            self.warpheight = self.projector.height

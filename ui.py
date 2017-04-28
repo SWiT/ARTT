@@ -126,9 +126,12 @@ class UI:
                     # Recalibrate zone
                     match = self.recalibratePattern.match(self.menurows[rowClicked])
                     if match:
-                        zidx = int(match.group(1))
+                        print("Recalibrate.")
                         Arena.markers = dict()
                         Arena.markerfoundcount = dict()
+                        self.calibrationCorners = []
+                        self.calibrationIds = []
+                        zidx = int(match.group(1))
                         Arena.zones[zidx].recalibrate()
                         return
 

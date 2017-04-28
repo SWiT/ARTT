@@ -14,7 +14,9 @@ class Arena:
         self.markers = dict()
         self.markerlist = []
         self.markerfoundcount = dict()
-        self.markerfoundmin = 20
+        self.calibrationMin = 10
+        self.calibrationCorners = []
+        self.calibrationIds = []
 
         self.corners            = []
         self.ids                = []
@@ -109,58 +111,55 @@ class Arena:
                 self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
 
                 if self.ids is not None:
-                    for index,foundid in enumerate(self.ids):
+                    for idx,foundid in enumerate(self.ids):
                         markerid = foundid[0] # I have no idea why the ids are a 2 dimensional list.
                         if markerid not in self.markers:
-                            self.markers[markerid] = self.corners[index][0]
+                            self.markers[markerid] = self.corners[idx][0]
                             self.markerfoundcount[markerid] = 1
                         else:
-                            if self.markerfoundcount[markerid] < self.markerfoundmin:
+                            if self.markerfoundcount[markerid] < self.calibrationMin:
                                 self.markerfoundcount[markerid] += 1
 
-                            #If the upper left corner's Y value is less than the existing value use it instead.
-                            if self.corners[index][0][0][0] < self.markers[markerid][0][0]:
-                                self.markers[markerid][0][0] = self.corners[index][0][0][0]
-                            #If the upper left corner's X value is less than the existing value use it instead.
-                            if self.corners[index][0][0][1] < self.markers[markerid][0][1]:
-                                self.markers[markerid][0][1] = self.corners[index][0][0][1]
+                # Store the calibrationMin of corners and ids
+                if len(self.corners) > 0:
+                    retval, charucoCorners, charucoIds = cv2.aruco.interpolateCornersCharuco(self.corners, self.ids, gray, z.projector.board)
+                    if charucoCorners is not None and charucoIds is not None and len(charucoCorners)==(z.projector.maxcalmarkerid+1):
+                        self.calibrationCorners.append(charucoCorners)
+                        self.calibrationIds.append(charucoIds)
+                        if len(self.calibrationCorners) > self.calibrationMin:
+                            # remove the oldest
+                            self.calibrationCorners.pop(0)
+                            self.calibrationIds.pop(0)
 
-                            #If the lower left corner's Y value is greater than the existing value use it instead.
-                            if self.corners[index][0][1][0] > self.markers[markerid][1][0]:
-                                self.markers[markerid][1][0] = self.corners[index][0][1][0]
-                            #If the lower left corner's X value is less than the existing value use it instead.
-                            if self.corners[index][0][1][1] < self.markers[markerid][1][1]:
-                                self.markers[markerid][1][1] = self.corners[index][0][1][1]
 
-                            #If the lower right corner's Y value is greater than the existing value use it instead.
-                            if self.corners[index][0][2][0] > self.markers[markerid][2][0]:
-                                self.markers[markerid][2][0] = self.corners[index][0][2][0]
-                            #If the lower right corner's X value is greater than the existing value use it instead.
-                            if self.corners[index][0][2][1] > self.markers[markerid][2][1]:
-                                self.markers[markerid][2][1] = self.corners[index][0][2][1]
-
-                            #If the upper right corner's Y value is less than the existing value use it instead.
-                            if self.corners[index][0][3][0] < self.markers[markerid][3][0]:
-                                self.markers[markerid][3][0] = self.corners[index][0][3][0]
-                            #If the upper right corner's X value is greater that the existing value use it instead.
-                            if self.corners[index][0][3][1] > self.markers[markerid][3][1]:
-                                self.markers[markerid][3][1] = self.corners[index][0][3][1]
-
-                # Calibration is complete when all calibration markers have been seen at least X times
-                calibrated = True
+                # Ready to calibrate when all markers have been found the minimum number of times.
+                ready = True
                 if len(self.markers)-1 == z.projector.maxcalmarkerid:
                     for idx in range(0,z.projector.maxcalmarkerid+1):
-                        if self.markerfoundcount[idx] < self.markerfoundmin:
-                            calibrated = False
+                        if self.markerfoundcount[idx] < self.calibrationMin:
+                            ready = False
                             break
                 else:
-                    calibrated = False
-                z.calibrated = calibrated
-                if z.calibrated:
+                    ready = False
+
+#                if len(self.calibrationCorners) != len(self.calibrationIds):
+#                    ready = False
+
+                if ready:
                     # Convert the markers dict to the data structure of self.corners
                     self.markerlist = []
                     for key, value in self.markers.iteritems():
                         self.markerlist.append(array([value]))
+
+                    #Capture frames to use the in camera calibration
+                    print("Calibrating...")
+                    try:
+                        retval, cameraMatrix, distCoeffs, rvecs, tvecs = cv2.aruco.calibrateCameraCharuco(self.calibrationCorners, self.calibrationIds, z.projector.board, gray.shape,None,None)
+                        print(retval, cameraMatrix, distCoeffs, rvecs, tvecs)
+                    except:
+                        print("Calibration failed")
+
+                z.calibrated = ready
 
 
         #End of zone loop

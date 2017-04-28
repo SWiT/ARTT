@@ -137,7 +137,7 @@ class Zone:
 
     def warpImage(self):
         # Prepare the transform if not done already.
-        print("undistort the frame")
+        #print("undistort the frame")
 #        if self.M is None:
 #            self.warpwidth = self.projector.width
 #            self.warpheight = self.projector.height

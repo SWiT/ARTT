@@ -123,7 +123,7 @@ class Arena:
                 # Store the calibrationMin of corners and ids
                 if len(self.corners) > 0:
                     retval, charucoCorners, charucoIds = cv2.aruco.interpolateCornersCharuco(self.corners, self.ids, gray, z.projector.board)
-                    if charucoCorners is not None and charucoIds is not None and len(charucoCorners)==(z.projector.maxcalmarkerid+1):
+                    if charucoCorners is not None and charucoIds is not None and len(charucoCorners)==len(charucoIds):
                         self.calibrationCorners.append(charucoCorners)
                         self.calibrationIds.append(charucoIds)
                         if len(self.calibrationCorners) > self.calibrationMin:
@@ -152,12 +152,13 @@ class Arena:
                         self.markerlist.append(array([value]))
 
                     #Capture frames to use the in camera calibration
-                    print("Calibrating...")
+                    print "Calibrating..."
                     try:
                         retval, cameraMatrix, distCoeffs, rvecs, tvecs = cv2.aruco.calibrateCameraCharuco(self.calibrationCorners, self.calibrationIds, z.projector.board, gray.shape,None,None)
-                        print(retval, cameraMatrix, distCoeffs, rvecs, tvecs)
+                        #print(retval, cameraMatrix, distCoeffs, rvecs, tvecs)
+                        print "Calibration successful"
                     except:
-                        print("Calibration failed")
+                        print "Calibration failed"
 
                 z.calibrated = ready
 

@@ -45,6 +45,10 @@ class Zone:
 
     def recalibrate(self):
         self.calibrated = False
+        self.cameraMatrix = None
+        self.distCoefs = None
+        self.rvecs = None
+        self.tvecs = None
         self.projector.outputCalibrationImage()
         return
 
@@ -151,11 +155,12 @@ class Zone:
 
         # crop the image
 
-#        x, y, w, h = roi
-#        dst = dst[y:y+h, x:x+w]
-#        self.image  = dst
-#        self.height = h
-#        self.width  = w
+        x, y, w, h = roi
+        if w > 0 and h > 0:
+            dst = dst[y:y+h, x:x+w]
+            self.image  = dst
+            self.height = h
+            self.width  = w
 
         #self.image  = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
 #        if self.image is not None:

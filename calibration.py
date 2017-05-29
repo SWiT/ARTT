@@ -42,46 +42,69 @@ class Calibration:
         cv2.imwrite('calibration_charuco.png', self.calibrationimg)
 
         #Start capturing images for calibration
+        self.imageWidth = 1920
+        self.imageHeight = 1080
         self.cap = cv2.VideoCapture(0)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.imageWidth)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.imageHeight)
 
         self.image     = None
         self.grayimage = None
 
-        self.regionsX = 5
-        self.regionsY = 5
-
+        self.roiX = 4
+        self.roiY = 3
+        self.roiCurr = (0,0)
+        self.roiPt0 = (0,0)
+        self.roiPt1 = (0,0)
+        self.roiWidth = self.imageWidth/self.roiX
+        self.roiHeight = self.imageHeight/self.roiY
+        self.setROI()
 
         return
+
+
+    def nextROI(self):
+        self.roiCurr += 1
+        if self.roiCurr % (self.roiX * self.roiY) == 0:
+            self.roiCurr = 0
+        self.setROI()
+        return
+
+
+    def setROI(self):
+        print "roi:",self.roiCurr
+        pt0 = 0 + int(self.roiWidth * self.roiCurr[0])
+        pt1 = 0 + int(self.roiHeight * self.roiCurr[1])
+        self.roiPt0 = (pt0,pt1)
+        pt0 = self.roiWidth + (self.roiWidth * self.roiCurr[0]) - 1
+        pt1 = self.roiHeight + (self.roiHeight * self.roiCurr[1]) - 1
+        self.roiPt1 = (pt0,pt1)
+        return
+
 
     def scan(self):
+        # Get the ROI
+        roi = self.grayimage[self.roiPt0[1]:self.roiPt1[1],self.roiPt0[0]:self.roiPt1[0]]
         # Detect markers in the image
-        self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(self.grayimage, self.aruco_dict, parameters=self.parameters)
+        self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(roi, self.aruco_dict, parameters=self.parameters)
         # If come markers were found.
-        if self.corners is not None and self.ids is not None:
-            # If all markers found.
-            if len(self.corners)==self.markercount and len(self.ids)==self.markercount:
-                print len(self.ids),"found!!!"
-                retval, charucoCorners, charucoIds = aruco.interpolateCornersCharuco(self.corners, self.ids, self.grayimage, self.board)
-                if charucoCorners is not None and charucoIds is not None and len(charucoCorners)>3:
-                    self.calibrationCorners.append(charucoCorners)
-                    self.calibrationIds.append(charucoIds)
-            else:
-                print len(self.ids),"found"
-
+        if self.corners is None or self.ids is None:
+            self.ids = np.array([])
+            self.corners = np.array([])
         return
+
+
+    def allFound(self):
+        return len(self.corners)==self.markercount and len(self.ids)==self.markercount
 
     def draw(self):
         # Draw detected markers
         aruco.drawDetectedMarkers(self.image, self.corners, self.ids)
 
         #Draw region of interest
-        h,w,d = self.image.shape
-        pt0 = (0,0)
-        pt1 = (w-1,h-1)
-        cv2.rectangle(self.image, pt0, pt1, self.COLOR_PURPLE, 1)
+        cv2.rectangle(self.image, self.roiPt0, self.roiPt1, self.COLOR_PURPLE, 1)
         return
+
 
     def resize(self):
         # Resize output image
@@ -90,12 +113,14 @@ class Calibration:
             self.image = cv2.resize(self.image, (0,0), fx=r, fy=r)
         return
 
+
     def getFrame(self):
         # Get the next frame.
         ret,self.image = self.cap.read()
         # Convert to grayscale.
         self.grayimage = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         return
+
 
 if __name__ == "__main__":
     print "SWiT's Calibration Script (Q to Exit)"
@@ -110,6 +135,20 @@ if __name__ == "__main__":
         cal.getFrame()
 
         cal.scan()
+
+        # If all markers found.
+        if cal.allFound():
+            print len(cal.ids),"found!!!"
+            # Save image
+
+            # Next region
+            self.nextROI()
+
+            #retval, charucoCorners, charucoIds = aruco.interpolateCornersCharuco(self.corners, self.ids, self.grayimage, self.board)
+            #if charucoCorners is not None and charucoIds is not None and len(charucoCorners)>3:
+            #    self.calibrationCorners.append(charucoCorners)
+            #    self.calibrationIds.append(charucoIds)
+
 
         cal.draw()
 

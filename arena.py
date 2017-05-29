@@ -1,4 +1,4 @@
-import re, os, cv2, time, re
+import re, os, cv2, time, re, os
 from numpy import *
 
 import zone, ui, procman
@@ -10,12 +10,6 @@ class Arena:
         self.numzones = 1    #default number of Zones
         self.zones = []
         self.videodevices = []
-
-        self.markers = dict()
-        self.markerfoundcount = dict()
-        self.calibrationMin = 10
-        self.calibrationCorners = []
-        self.calibrationIds = []
 
         self.corners            = []
         self.ids                = []
@@ -65,10 +59,20 @@ class Arena:
             z.getImage()
             timestamp = time.time()
 
+            gray = cv2.cvtColor(z.image, cv2.COLOR_BGR2GRAY)
+            self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
+
+            if self.ids is not None:
+                if len(self.ids) == (z.projector.markercount):
+                    allfound = "!!!"
+                else:
+                    allfound = ""
+                print len(self.ids),"found",allfound
+
             # If the zone is calibrated
-            if z.calibrated:
+#            if z.calibrated:
                 # Warp the zone part of the image and make it rectangular.
-                z.warpImage()
+#                z.warpImage()
 
                 # Handle any returned symbol data.
 #                while self.procman.resultsAvailable():
@@ -104,54 +108,10 @@ class Arena:
 
 
             # If the zone is not calibrated
-            else:
-                #Convert image to grayscale and detect markers.
-                gray = cv2.cvtColor(z.image, cv2.COLOR_BGR2GRAY)
-                self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
+            #else:
 
-                if self.ids is not None:
-                    for idx,foundid in enumerate(self.ids):
-                        markerid = foundid[0] # I have no idea why the ids are a 2 dimensional list.
-                        if markerid not in self.markers:
-                            self.markers[markerid] = self.corners[idx][0]
-                            self.markerfoundcount[markerid] = 1
-                        else:
-                            if self.markerfoundcount[markerid] < self.calibrationMin:
-                                self.markerfoundcount[markerid] += 1
+            #    print "not calibrated."
 
-                # Store the calibrationMin of corners and ids
-                if len(self.corners) > 0:
-                    retval, charucoCorners, charucoIds = cv2.aruco.interpolateCornersCharuco(self.corners, self.ids, gray, z.projector.board)
-                    if charucoCorners is not None and charucoIds is not None and len(charucoCorners)==len(charucoIds):
-                        self.calibrationCorners.append(charucoCorners)
-                        self.calibrationIds.append(charucoIds)
-                        if len(self.calibrationCorners) > self.calibrationMin:
-                            # remove the oldest
-                            self.calibrationCorners.pop(0)
-                            self.calibrationIds.pop(0)
-
-
-                # Ready to calibrate when all markers have been found the minimum number of times.
-                ready = True
-                if len(self.markers)-1 == z.projector.maxcalmarkerid:
-                    for idx in range(0,z.projector.maxcalmarkerid+1):
-                        if self.markerfoundcount[idx] < self.calibrationMin:
-                            ready = False
-                            break
-                else:
-                    ready = False
-
-                if ready:
-                    #Capture frames to use the in camera calibration
-                    print "Calibrating..."
-                    try:
-                        retval, z.cameraMatrix, z.distCoefs, z.rvecs, z.tvecs = cv2.aruco.calibrateCameraCharuco(self.calibrationCorners, self.calibrationIds, z.projector.board, gray.shape,None,None)
-                        #print(retval, cameraMatrix, distCoeffs, rvecs, tvecs)
-                        print "Calibration successful"
-                    except:
-                        print "Calibration failed"
-
-                z.calibrated = ready
 
 
         #End of zone loop
@@ -195,7 +155,7 @@ class Arena:
                     continue;
 
                 # Draw Objects on Scanner window
-                # Crosshair in center
+                # Crosshair in centeroutputImg
                 pt0 = (z.width/2, z.height/2-5)
                 pt1 = (z.width/2, z.height/2+5)
                 cv2.line(img, pt0, pt1, self.ui.COLOR_PURPLE, 1)
@@ -205,7 +165,7 @@ class Arena:
 
                 # Draw the markers
                 if not z.calibrated:
-                    outputImg = aruco.drawDetectedMarkers(z.image, self.corners)
+                    outputImg = aruco.drawDetectedMarkers(z.image, z.corners)
 
 
                 if self.ui.displayAll():

@@ -55,16 +55,17 @@ class Projector:
         return self.outputimg
 
     def renderCalibrationImage(self):
-        cols = 12
-        rows = 8
-        square = 100
-        marker = 50
-        self.board = cv2.aruco.CharucoBoard_create(cols,rows,square,marker, self.aruco_dict)
-        self.calibrationimg = self.board.draw((self.width,self.height), marginSize=10)
+        cols = 6
+        rows = 4
+        squaresize = 100
+        markersize = 50
+        margin = 20
+        self.board = cv2.aruco.CharucoBoard_create(cols,rows,squaresize,markersize, self.aruco_dict)
+        self.calibrationimg = self.board.draw((self.width,self.height), marginSize=margin)
         cv2.imwrite('calibration_charuco.png', self.calibrationimg)
 
-        self.maxcalmarkerid = (cols*rows)/2 - 1
-        print "Calibration Markers: 0 - " + str(self.maxcalmarkerid)
+        self.markercount = (cols*rows)/2
+        print "Calibration Markers: 0 - " + str(self.markercount - 1)
 
         if self.flip:
             self.calibrationimg = cv2.flip(self.calibrationimg, 1) # Flip X axis

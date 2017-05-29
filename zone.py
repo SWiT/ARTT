@@ -1,4 +1,5 @@
-import cv2, subprocess
+import cv2, subprocess, os
+import cv2.aruco as aruco
 from numpy import *
 from utils import *
 import projector
@@ -40,6 +41,46 @@ class Zone:
         self.initVideoDevice()
 
         self.calibrated = False
+
+        self.calibrationCorners = []
+        self.calibrationIds = []
+
+        self.corners            = []
+        self.ids                = []
+        self.rejectedImgPoints  = []
+        self.aruco_dict         = aruco.Dictionary_get(aruco.DICT_4X4_50)
+        self.parameters         = aruco.DetectorParameters_create()
+
+
+        # Calibrate for the distortion of the camera lens.
+        for fn in os.listdir("calibrationimages"):
+            fn = "calibrationimages/"  +fn
+            gray = cv2.imread(fn, 0)
+            self.image = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+            cv2.imshow("ArenaScanner", self.image)
+            self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
+
+            if self.ids is not None and len(self.ids) == (self.projector.markercount):
+                allfound = "!!!"
+                if len(self.corners) > 0:
+                    retval, charucoCorners, charucoIds = cv2.aruco.interpolateCornersCharuco(self.corners, self.ids, gray, self.projector.board)
+                    if charucoCorners is not None and charucoIds is not None and len(charucoCorners)==len(charucoIds):
+                        self.calibrationCorners.append(charucoCorners)
+                        self.calibrationIds.append(charucoIds)
+            else:
+                allfound = ""
+
+            print fn,len(self.ids),"found",allfound
+
+        # Ready to calibrate when all calibration image have been processed.
+        print "Calibrating..."
+        try:
+            retval, z.cameraMatrix, z.distCoefs, z.rvecs, z.tvecs = cv2.aruco.calibrateCameraCharuco(self.calibrationCorners, self.calibrationIds, z.projector.board, gray.shape,None,None)
+            #print(retval, cameraMatrix, distCoeffs, rvecs, tvecs)
+            print "Calibration successful"
+            self.calibrated = True
+        except:
+            print "Calibration failed"
 
         return
 
@@ -151,7 +192,7 @@ class Zone:
         newcameramtx, roi = cv2.getOptimalNewCameraMatrix(self.cameraMatrix, self.distCoefs, (w, h), 1, (w, h))
         dst = cv2.undistort(img, self.cameraMatrix, self.distCoefs, None, newcameramtx)
         self.image = dst
-        print "roi:", roi
+        #print "roi:", roi
 
         # crop the image
 

@@ -23,6 +23,7 @@ class Calibration:
         boardmargin = 20
         self.boardwidth = 800
         self.boardheight = 600
+        self.markercount = (boardcols*boardrows)/2
 
         self.displaySize = 60
 
@@ -35,15 +36,13 @@ class Calibration:
         self.calibrationCorners = []
         self.calibrationIds = []
 
-        self.markercount = (boardcols*boardrows)/2
-
         self.board = cv2.aruco.CharucoBoard_create(boardcols,boardrows,boardsquaresize,boardmarkersize, self.aruco_dict)
         self.boardimage = self.board.draw((self.boardwidth,self.boardheight), marginSize=boardmargin)
         cv2.imwrite('calibration_charuco.png', self.boardimage)
 
         self.folder = "calibrationimages"
 
-        #Start capturing images for calibration
+        # Create the capture object
         self.imageWidth = 1920
         self.imageHeight = 1080
         self.cap = cv2.VideoCapture(0)
@@ -53,13 +52,13 @@ class Calibration:
         self.image     = None
         self.grayimage = None
 
-        self.roiX = 4
-        self.roiY = 3
+        self.roiX = 7
+        self.roiY = 5
         self.roiCurr = [0,0]
         self.roiPt0 = (0,0)
         self.roiPt1 = (0,0)
-        self.roiWidth = self.imageWidth/self.roiX
-        self.roiHeight = self.imageHeight/self.roiY
+        self.roiWidth = self.imageWidth/((self.roiX+1)/2)
+        self.roiHeight = self.imageHeight/((self.roiY+1)/2)
         self.setROI()
 
         return
@@ -77,11 +76,11 @@ class Calibration:
 
 
     def setROI(self):
-        pt0 = 0 + int(self.roiWidth * self.roiCurr[0])
-        pt1 = 0 + int(self.roiHeight * self.roiCurr[1])
+        pt0 = 0 + int(self.roiWidth/2 * self.roiCurr[0])
+        pt1 = 0 + int(self.roiHeight/2 * self.roiCurr[1])
         self.roiPt0 = (pt0,pt1)
-        pt0 = self.roiWidth + (self.roiWidth * self.roiCurr[0]) - 1
-        pt1 = self.roiHeight + (self.roiHeight * self.roiCurr[1]) - 1
+        pt0 = self.roiWidth + (self.roiWidth/2 * self.roiCurr[0]) - 1
+        pt1 = self.roiHeight + (self.roiHeight/2 * self.roiCurr[1]) - 1
         self.roiPt1 = (pt0,pt1)
         print "roi:",self.roiCurr,self.roiPt0,self.roiPt1
         return

@@ -53,7 +53,7 @@ class Calibration:
 
         self.roiX = 4
         self.roiY = 3
-        self.roiCurr = (0,0)
+        self.roiCurr = [0,0]
         self.roiPt0 = (0,0)
         self.roiPt1 = (0,0)
         self.roiWidth = self.imageWidth/self.roiX
@@ -64,21 +64,24 @@ class Calibration:
 
 
     def nextROI(self):
-        self.roiCurr += 1
-        if self.roiCurr % (self.roiX * self.roiY) == 0:
-            self.roiCurr = 0
+        self.roiCurr[0] += 1
+        if self.roiCurr[0] % self.roiX == 0:
+            self.roiCurr[0] = 0
+            self.roiCurr[1] += 1
+            if self.roiCurr[1] % self.roiY == 0:
+                self.roiCurr[1] = 0
         self.setROI()
         return
 
 
     def setROI(self):
-        print "roi:",self.roiCurr
         pt0 = 0 + int(self.roiWidth * self.roiCurr[0])
         pt1 = 0 + int(self.roiHeight * self.roiCurr[1])
         self.roiPt0 = (pt0,pt1)
         pt0 = self.roiWidth + (self.roiWidth * self.roiCurr[0]) - 1
         pt1 = self.roiHeight + (self.roiHeight * self.roiCurr[1]) - 1
         self.roiPt1 = (pt0,pt1)
+        print "roi:",self.roiCurr,self.roiPt0,self.roiPt1
         return
 
 
@@ -142,7 +145,7 @@ if __name__ == "__main__":
             # Save image
 
             # Next region
-            self.nextROI()
+            cal.nextROI()
 
             #retval, charucoCorners, charucoIds = aruco.interpolateCornersCharuco(self.corners, self.ids, self.grayimage, self.board)
             #if charucoCorners is not None and charucoIds is not None and len(charucoCorners)>3:

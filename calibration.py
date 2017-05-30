@@ -16,11 +16,11 @@ class Calibration:
         self.COLOR_PURPLE = (224,27,217)
         self.COLOR_GRAY = (127,127,127)
 
-        cols = 6
-        rows = 4
-        squaresize = 100
-        markersize = 50
-        margin = 20
+        boardcols = 5
+        boardrows = 4
+        boardsquaresize = 100
+        boardmarkersize = 50
+        boardmargin = 20
         self.boardwidth = 800
         self.boardheight = 600
 
@@ -35,11 +35,13 @@ class Calibration:
         self.calibrationCorners = []
         self.calibrationIds = []
 
-        self.markercount = (cols*rows)/2
+        self.markercount = (boardcols*boardrows)/2
 
-        self.board = cv2.aruco.CharucoBoard_create(cols,rows,squaresize,markersize, self.aruco_dict)
-        self.calibrationimg = self.board.draw((self.boardwidth,self.boardheight), marginSize=margin)
-        cv2.imwrite('calibration_charuco.png', self.calibrationimg)
+        self.board = cv2.aruco.CharucoBoard_create(boardcols,boardrows,boardsquaresize,boardmarkersize, self.aruco_dict)
+        self.boardimage = self.board.draw((self.boardwidth,self.boardheight), marginSize=boardmargin)
+        cv2.imwrite('calibration_charuco.png', self.boardimage)
+
+        self.folder = "calibrationimages"
 
         #Start capturing images for calibration
         self.imageWidth = 1920
@@ -101,11 +103,14 @@ class Calibration:
         return len(self.corners)==self.markercount and len(self.ids)==self.markercount
 
     def draw(self):
+        # Get the ROI
+        roi = self.image[self.roiPt0[1]:self.roiPt1[1],self.roiPt0[0]:self.roiPt1[0]]
         # Draw detected markers
-        aruco.drawDetectedMarkers(self.image, self.corners, self.ids)
+        aruco.drawDetectedMarkers(roi, self.corners, self.ids)
+        self.image[self.roiPt0[1]:self.roiPt1[1],self.roiPt0[0]:self.roiPt1[0]] = roi
 
         #Draw region of interest
-        cv2.rectangle(self.image, self.roiPt0, self.roiPt1, self.COLOR_PURPLE, 1)
+        cv2.rectangle(self.image, self.roiPt0, self.roiPt1, self.COLOR_PURPLE, 2)
         return
 
 
@@ -141,8 +146,9 @@ if __name__ == "__main__":
 
         # If all markers found.
         if cal.allFound():
-            print len(cal.ids),"found!!!"
             # Save image
+            fn = cal.folder+"/"+str(cal.roiCurr[1])+"_"+str(cal.roiCurr[0])+".jpg"
+            cv2.imwrite(fn, cal.image)
 
             # Next region
             cal.nextROI()

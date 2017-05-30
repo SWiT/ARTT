@@ -1,9 +1,9 @@
 #!/usr/bin/env python2
 #encoding: UTF-8
-import time
-import cv2
+import cv2, os, time
 import cv2.aruco as aruco
 import numpy as np
+
 
 class Calibration:
     def __init__(self):
@@ -54,12 +54,13 @@ class Calibration:
 
         self.roiX = 7
         self.roiY = 5
-        self.roiCurr = [0,0]
-        self.roiPt0 = (0,0)
-        self.roiPt1 = (0,0)
+        self.roiCurr = [0, 0]
+        self.roiPt0 = (0, 0)
+        self.roiPt1 = (0, 0)
         self.roiWidth = self.imageWidth/((self.roiX+1)/2)
         self.roiHeight = self.imageHeight/((self.roiY+1)/2)
-        self.setROI()
+
+        self.calibrated = False
 
         return
 
@@ -78,11 +79,17 @@ class Calibration:
     def setROI(self):
         pt0 = 0 + int(self.roiWidth/2 * self.roiCurr[0])
         pt1 = 0 + int(self.roiHeight/2 * self.roiCurr[1])
-        self.roiPt0 = (pt0,pt1)
+        self.roiPt0 = (pt0, pt1)
         pt0 = self.roiWidth + (self.roiWidth/2 * self.roiCurr[0]) - 1
         pt1 = self.roiHeight + (self.roiHeight/2 * self.roiCurr[1]) - 1
-        self.roiPt1 = (pt0,pt1)
-        print "roi:",self.roiCurr,self.roiPt0,self.roiPt1
+        self.roiPt1 = (pt0, pt1)
+        print "roi:", self.roiCurr, self.roiPt0, self.roiPt1
+        return
+
+    def resetROI(self):
+        self.roiPt0 = (0, 0)
+        self.roiPt1 = (self.imageWidth-1, self.imageHeight-1)
+        print "roi:", "All", self.roiPt0, self.roiPt1
         return
 
 
@@ -121,12 +128,46 @@ class Calibration:
         return
 
 
+    def display(self):
+        self.resize()
+        cv2.imshow("Calibration", self.image)
+        return
+
     def getFrame(self):
         # Get the next frame.
-        ret,self.image = self.cap.read()
+        ret, self.image = self.cap.read()
         # Convert to grayscale.
         self.grayimage = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         return
+
+
+    def calibrate(self):
+        print "Reading image files..."
+        listdir = os.listdir(self.folder)
+        listdir.sort()
+        self.resetROI()
+        for fn in listdir:
+            fn = self.folder + "/" + fn
+            self.image = cv2.imread(fn)
+            self.grayimage = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+
+            self.scan()
+            found = ""
+            if self.allFound():
+                found = "All Found"
+
+            self.display()
+            print fn, found
+            cv2.waitKey(25)
+
+        return
+
+
+    def checkCalibrationFiles(self):
+        listdir = os.listdir(self.folder)
+        found = len(listdir)
+        print found,"images found."
+        return found == (self.roiX * self.roiY)
 
 
 if __name__ == "__main__":
@@ -137,7 +178,12 @@ if __name__ == "__main__":
 
     cal = Calibration()
 
-    while True:
+    if cal.checkCalibrationFiles():
+        cal.calibrate()
+
+    cal.setROI()
+
+    while not cal.calibrated:
         # Get the next frame.
         cal.getFrame()
 
@@ -180,4 +226,4 @@ if __name__ == "__main__":
 
     cal.cap.release()
     cv2.destroyAllWindows()
-    print("Exit...")
+    print("Exit.")

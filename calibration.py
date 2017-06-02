@@ -63,6 +63,12 @@ class Calibration:
         self.setROI()
 
         self.calibrated = False
+        self.exit = False
+
+        self.cameraMatrix = None
+        self.distCoefs = None
+        self.rvecs = None
+        self.tvecs = None
 
         return
 
@@ -163,6 +169,8 @@ class Calibration:
 
 
     def calibrate(self):
+        self.calibrationCorners = []
+        self.calibrationIds = []
         print "Reading image files..."
         listdir = os.listdir(self.folder)
         listdir.sort()
@@ -173,20 +181,37 @@ class Calibration:
             self.grayimage = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
             self.scan()
-            found = ""
+            foundmsg = ""
             if self.allFound():
-                found = "All Found"
+                foundmsg = "All Found"
                 roiX = int(fn.split(".")[0].split("_")[1])
                 roiY = int(fn.split(".")[0].split("_")[0])
                 self.roiReady[roiY, roiX] = 1
+
+                retval, charucoCorners, charucoIds = aruco.interpolateCornersCharuco(self.corners, self.ids, self.grayimage, self.board)
+                if charucoCorners is not None and charucoIds is not None and len(charucoCorners)>3:
+                    self.calibrationCorners.append(charucoCorners)
+                    self.calibrationIds.append(charucoIds)
+
             else:
-                found = "corners",len(self.corners),"ids",len(self.ids)
+                foundmsg = "corners",len(self.corners),"ids",len(self.ids)
             self.display()
-            print fn, found
+            print fn, foundmsg
             cv2.waitKey(25)
 
         print self.roiReady
-        print len(np.where(self.roiReady == 0)[0]),"not ready"
+
+        if self.allROIReady():
+            # Ready to calibrate when all calibration image have been processed.
+            print "Calibrating..."
+            try:
+                retval, self.cameraMatrix, self.distCoefs, self.rvecs, self.tvecs = aruco.calibrateCameraCharuco(self.calibrationCorners, self.calibrationIds, self.board, self.grayimage.shape,None,None)
+                #print(retval, cameraMatrix, distCoeffs, rvecs, tvecs)
+                print "Calibration successful"
+                self.calibrated = True
+            except:
+                print "Calibration failed"
+                exit()
         return
 
 
@@ -211,38 +236,41 @@ if __name__ == "__main__":
     cal.setROI()
     cal.nextUnreadyROI()
 
-    while not cal.calibrated:
+    while not cal.exit:
         # Get the next frame.
         cal.getFrame()
+        if cal.calibrated:
+            print "Calibrated?"
+            break
+        else:
+            if cal.allROIReady():
+                print "Calibrating..."
+                cal.calibrate()
+                break
 
-        cal.scan()
+            else:
+                # Scan the ROI
+                cal.scan()
+                # If all markers found.
+                if cal.allFound():
+                    print "found all in ROI"
+                    # Now scan the whole image.
+                    cal.resetROI()
+                    cal.scan()
+                    # If all markers found.
+                    if cal.allFound():
+                        print "found all in whole image"
+                        # Set the ROI as ready for calibration
+                        cal.roiReady[cal.roiCurr[1], cal.roiCurr[0]] = 1
 
-        # If all markers found.
-        if cal.allFound():
-            print "found all in ROI"
-            # Now scan the whole image.
-            cal.resetROI()
-            cal.scan()
-            # If all markers found.
-            if cal.allFound():
-                print "found all in whole image"
-                # Set the ROI as ready for calibration
-                cal.roiReady[cal.roiCurr[1], cal.roiCurr[0]] = 1
+                        # Save image
+                        fn = cal.folder+"/"+str(cal.roiCurr[1])+"_"+str(cal.roiCurr[0])+".jpg"
+                        cv2.imwrite(fn, cal.image)
+                        print "wrote",fn
 
-                # Save image
-                fn = cal.folder+"/"+str(cal.roiCurr[1])+"_"+str(cal.roiCurr[0])+".jpg"
-                cv2.imwrite(fn, cal.image)
-
-                # Next region
-                cal.nextUnreadyROI()
-
-        #retval, charucoCorners, charucoIds = aruco.interpolateCornersCharuco(self.corners, self.ids, self.grayimage, self.board)
-        #if charucoCorners is not None and charucoIds is not None and len(charucoCorners)>3:
-        #    self.calibrationCorners.append(charucoCorners)
-        #    self.calibrationIds.append(charucoIds)
-
-
-        cal.draw()
+                        # Next region
+                        cal.nextUnreadyROI()
+                cal.draw()
 
         # Display the image or frame of video
         cal.resize()
@@ -251,6 +279,7 @@ if __name__ == "__main__":
         #Exit
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
 
 #    if False:
 #        print("Calibrating...")

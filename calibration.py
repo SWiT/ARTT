@@ -52,17 +52,33 @@ class Calibration:
         self.image     = None
         self.grayimage = None
 
-        self.roiX = 7
         self.roiY = 5
-        self.roiCurr = [0, 0]
+        self.roiX = 7
+        self.roiReady = np.zeros((self.roiY, self.roiX));
         self.roiPt0 = (0, 0)
         self.roiPt1 = (0, 0)
         self.roiWidth = self.imageWidth/((self.roiX+1)/2)
         self.roiHeight = self.imageHeight/((self.roiY+1)/2)
+        self.roiCurr = [0, 0]
+        self.setROI()
 
         self.calibrated = False
 
         return
+
+
+    def nextUnreadyROI(self):
+        self.nextROI()
+        while self.isROIReady():
+            self.nextROI()
+            if self.allROIReady():
+                self.resetROI()
+                break;
+        return
+
+
+    def allROIReady(self):
+        return len(np.where(self.roiReady == 0)[0]) == 0
 
 
     def nextROI(self):
@@ -86,6 +102,7 @@ class Calibration:
         print "roi:", self.roiCurr, self.roiPt0, self.roiPt1
         return
 
+
     def resetROI(self):
         self.roiPt0 = (0, 0)
         self.roiPt1 = (self.imageWidth-1, self.imageHeight-1)
@@ -93,12 +110,15 @@ class Calibration:
         return
 
 
+    def isROIReady(self):
+        return self.roiReady[self.roiCurr[1], self.roiCurr[0]] == 1
+
     def scan(self):
         # Get the ROI
         roi = self.grayimage[self.roiPt0[1]:self.roiPt1[1],self.roiPt0[0]:self.roiPt1[0]]
         # Detect markers in the image
         self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(roi, self.aruco_dict, parameters=self.parameters)
-        # If come markers were found.
+        # If no markers were found.
         if self.corners is None or self.ids is None:
             self.ids = np.array([])
             self.corners = np.array([])
@@ -109,10 +129,11 @@ class Calibration:
         return len(self.corners)==self.markercount and len(self.ids)==self.markercount
 
     def draw(self):
-        # Get the ROI
+        # Get the ROI.
         roi = self.image[self.roiPt0[1]:self.roiPt1[1],self.roiPt0[0]:self.roiPt1[0]]
-        # Draw detected markers
+        # Draw detected markers.
         aruco.drawDetectedMarkers(roi, self.corners, self.ids)
+        # Put the ROI back.
         self.image[self.roiPt0[1]:self.roiPt1[1],self.roiPt0[0]:self.roiPt1[0]] = roi
 
         #Draw region of interest
@@ -147,19 +168,25 @@ class Calibration:
         listdir.sort()
         self.resetROI()
         for fn in listdir:
-            fn = self.folder + "/" + fn
-            self.image = cv2.imread(fn)
+            fullpath = self.folder + "/" + fn
+            self.image = cv2.imread(fullpath)
             self.grayimage = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
             self.scan()
             found = ""
             if self.allFound():
                 found = "All Found"
-
+                roiX = int(fn.split(".")[0].split("_")[1])
+                roiY = int(fn.split(".")[0].split("_")[0])
+                self.roiReady[roiY, roiX] = 1
+            else:
+                found = "corners",len(self.corners),"ids",len(self.ids)
             self.display()
             print fn, found
             cv2.waitKey(25)
 
+        print self.roiReady
+        print len(np.where(self.roiReady == 0)[0]),"not ready"
         return
 
 
@@ -182,6 +209,7 @@ if __name__ == "__main__":
         cal.calibrate()
 
     cal.setROI()
+    cal.nextUnreadyROI()
 
     while not cal.calibrated:
         # Get the next frame.
@@ -191,17 +219,27 @@ if __name__ == "__main__":
 
         # If all markers found.
         if cal.allFound():
-            # Save image
-            fn = cal.folder+"/"+str(cal.roiCurr[1])+"_"+str(cal.roiCurr[0])+".jpg"
-            cv2.imwrite(fn, cal.image)
+            print "found all in ROI"
+            # Now scan the whole image.
+            cal.resetROI()
+            cal.scan()
+            # If all markers found.
+            if cal.allFound():
+                print "found all in whole image"
+                # Set the ROI as ready for calibration
+                cal.roiReady[cal.roiCurr[1], cal.roiCurr[0]] = 1
 
-            # Next region
-            cal.nextROI()
+                # Save image
+                fn = cal.folder+"/"+str(cal.roiCurr[1])+"_"+str(cal.roiCurr[0])+".jpg"
+                cv2.imwrite(fn, cal.image)
 
-            #retval, charucoCorners, charucoIds = aruco.interpolateCornersCharuco(self.corners, self.ids, self.grayimage, self.board)
-            #if charucoCorners is not None and charucoIds is not None and len(charucoCorners)>3:
-            #    self.calibrationCorners.append(charucoCorners)
-            #    self.calibrationIds.append(charucoIds)
+                # Next region
+                cal.nextUnreadyROI()
+
+        #retval, charucoCorners, charucoIds = aruco.interpolateCornersCharuco(self.corners, self.ids, self.grayimage, self.board)
+        #if charucoCorners is not None and charucoIds is not None and len(charucoCorners)>3:
+        #    self.calibrationCorners.append(charucoCorners)
+        #    self.calibrationIds.append(charucoIds)
 
 
         cal.draw()

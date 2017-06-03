@@ -69,7 +69,7 @@ class Calibration:
         self.distCoefs = None
         self.rvecs = None
         self.tvecs = None
-
+        self.undistort = True
         return
 
 
@@ -105,14 +105,14 @@ class Calibration:
         pt0 = self.roiWidth + (self.roiWidth/2 * self.roiCurr[0]) - 1
         pt1 = self.roiHeight + (self.roiHeight/2 * self.roiCurr[1]) - 1
         self.roiPt1 = (pt0, pt1)
-        print "roi:", self.roiCurr, self.roiPt0, self.roiPt1
+        #print "roi:", self.roiCurr, self.roiPt0, self.roiPt1
         return
 
 
     def resetROI(self):
         self.roiPt0 = (0, 0)
         self.roiPt1 = (self.imageWidth-1, self.imageHeight-1)
-        print "roi:", "All", self.roiPt0, self.roiPt1
+        #print "roi:", "All", self.roiPt0, self.roiPt1
         return
 
 
@@ -223,10 +223,9 @@ class Calibration:
 
 
 if __name__ == "__main__":
-    print "SWiT's Calibration Script (Q to Exit)"
+    print "SWiT's Calibration Script (Q to Exit, U to toggle undistorting)"
 
     cv2.namedWindow("Calibration")
-    #cv2.startWindowThread() #This and waitKey don't like each other. Not sure why.
 
     cal = Calibration()
 
@@ -240,13 +239,15 @@ if __name__ == "__main__":
         # Get the next frame.
         cal.getFrame()
         if cal.calibrated:
-            print "Calibrated?"
-            break
+            if cal.undistort:
+                # Undistort the image
+                h,  w = cal.image.shape[:2]
+                newcameramtx, roi = cv2.getOptimalNewCameraMatrix(cal.cameraMatrix, cal.distCoefs, (w, h), 1, (w, h))
+                cal.image = cv2.undistort(cal.image, cal.cameraMatrix, cal.distCoefs, None, newcameramtx)
+
         else:
             if cal.allROIReady():
-                print "Calibrating..."
                 cal.calibrate()
-                break
 
             else:
                 # Scan the ROI
@@ -276,21 +277,16 @@ if __name__ == "__main__":
         cal.resize()
         cv2.imshow('Calibration', cal.image)
 
-        #Exit
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        # Handle any command key presses.
+        key = cv2.waitKey(1)
+        if key & 0xFF == ord('q') or key == 27: # q or Esc to exit
             break
+        elif key & 0xFF == ord('u'):            # u to toggle undistorting the image once calibrated.
+            cal.undistort = not cal.undistort
+        #elif key != 255:
+        #    print "key",key
 
-
-#    if False:
-#        print("Calibrating...")
-        #Calibration fails for lots of reasons. Release the video if we do
-#        try:
-#            imsize = gray.shape
-#            retval, cameraMatrix, distCoeffs, rvecs, tvecs = cv2.aruco.calibrateCameraCharuco(allCorners,allIds,board,imsize,None,None)
-#            print(retval, cameraMatrix, distCoeffs, rvecs, tvecs)
-#        except:
-#            cap.release()
-
+    #Exit
     cal.cap.release()
     cv2.destroyAllWindows()
     print("Exit.")

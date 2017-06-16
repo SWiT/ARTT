@@ -1,8 +1,9 @@
 #!/usr/bin/env python2
 #encoding: UTF-8
-import cv2, os, time
+import cv2, os, time, re
 import cv2.aruco as aruco
 import numpy as np
+
 
 
 class Calibration:
@@ -52,13 +53,13 @@ class Calibration:
         self.image     = None
         self.grayimage = None
 
-        self.roiY = 5
-        self.roiX = 7
+        self.roiY = 4
+        self.roiX = 6
         self.roiReady = np.zeros((self.roiY, self.roiX));
         self.roiPt0 = (0, 0)
         self.roiPt1 = (0, 0)
-        self.roiWidth = self.imageWidth/((self.roiX+1)/2)
-        self.roiHeight = self.imageHeight/((self.roiY+1)/2)
+        self.roiWidth = self.imageWidth / (self.roiX + 1) * 2
+        self.roiHeight = self.imageHeight / (self.roiY + 1) * 2
         self.roiCurr = [0, 0]
         self.setROI()
 
@@ -184,10 +185,15 @@ class Calibration:
             foundmsg = ""
             if self.allFound():
                 foundmsg = "All Found"
-                roiX = int(fn.split(".")[0].split("_")[1])
-                roiY = int(fn.split(".")[0].split("_")[0])
-                self.roiReady[roiY, roiX] = 1
-
+                #if regex match
+                p = re.compile('(\d)_(\d)\.jpg')
+                m = p.match(fn)
+                if m:
+                    #print 'Match found: ', m.group(0), m.group(1), m.group(2)
+                    roiX = int(m.group(2))
+                    roiY = int(m.group(1))
+                    self.roiReady[roiY, roiX] = 1
+                
                 retval, charucoCorners, charucoIds = aruco.interpolateCornersCharuco(self.corners, self.ids, self.grayimage, self.board)
                 if charucoCorners is not None and charucoIds is not None and len(charucoCorners)>3:
                     self.calibrationCorners.append(charucoCorners)
@@ -223,14 +229,15 @@ class Calibration:
 
 
 if __name__ == "__main__":
-    print "SWiT's Calibration Script (Q to Exit, U to toggle undistorting)"
+    print "SWiT's Camera Lens Calibration Script"
+    print "Q or Esc to exit"
+    print "U to toggle undistorting"
+    print "[Space] to save the next valid image"
 
     cv2.namedWindow("Calibration")
 
     cal = Calibration()
-
-    if cal.checkCalibrationFiles():
-        cal.calibrate()
+    cal.calibrate()
 
     cal.setROI()
     cal.nextUnreadyROI()
@@ -283,6 +290,8 @@ if __name__ == "__main__":
             break
         elif key & 0xFF == ord('u'):            # u to toggle undistorting the image once calibrated.
             cal.undistort = not cal.undistort
+        elif key & 0xFF == ord(' '):            # [Space] to save next valid image
+            print "Save Next."
         #elif key != 255:
         #    print "key",key
 

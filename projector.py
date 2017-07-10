@@ -8,7 +8,7 @@ class Projector:
     def __init__(self, height, width):
         self.width = width
         self.height = height
-        self.flip = True
+        self.flip = False
         self.baseimg        = None  # Base map texture on top of which output is drawn.
         self.calibrationimg = None  # The calibration image for lens adjustments.
         self.outputimg      = None  # The image being output by the projector.
@@ -55,18 +55,27 @@ class Projector:
         return self.outputimg
 
     def renderCalibrationImage(self):
-        cols = 6
-        rows = 4
-        squaresize = 100
+        # Create a empty white image.
+        self.calibrationimg = np.zeros((self.height,self.width,3), np.uint8)
+        self.calibrationimg[:,:] = (255,255,255)
+
+        markerid = 0
         markersize = 50
-        margin = 20
-        self.board = cv2.aruco.CharucoBoard_create(cols,rows,squaresize,markersize, self.aruco_dict)
-        self.calibrationimg = self.board.draw((self.width,self.height), marginSize=margin)
-        cv2.imwrite('calibration_charuco.png', self.calibrationimg)
+        marginsize = 5
+        marker = cv2.cvtColor(aruco.drawMarker(self.aruco_dict, markerid, markersize, borderBits=1), cv2.COLOR_GRAY2BGR)
+        self.calibrationimg[0+marginsize:markersize+marginsize, 0+marginsize:markersize+marginsize] = marker
 
-        self.markercount = (cols*rows)/2
-        print "Calibration Markers: 0 - " + str(self.markercount - 1)
+        markerid = 1
+        marker = cv2.cvtColor(aruco.drawMarker(self.aruco_dict, markerid, markersize, borderBits=1), cv2.COLOR_GRAY2BGR)
+        self.calibrationimg[self.height-markersize-marginsize:self.height-marginsize, 0+marginsize:markersize+marginsize] = marker
 
+        markerid = 2
+        marker = cv2.cvtColor(aruco.drawMarker(self.aruco_dict, markerid, markersize, borderBits=1), cv2.COLOR_GRAY2BGR)
+        self.calibrationimg[self.height-markersize-marginsize:self.height-marginsize, self.width-markersize-marginsize:self.width-marginsize] = marker
+
+        markerid = 3
+        marker = cv2.cvtColor(aruco.drawMarker(self.aruco_dict, markerid, markersize, borderBits=1), cv2.COLOR_GRAY2BGR)
+        self.calibrationimg[0+marginsize:markersize+marginsize, self.width-markersize-marginsize:self.width-marginsize] = marker
         if self.flip:
             self.calibrationimg = cv2.flip(self.calibrationimg, 1) # Flip X axis
 

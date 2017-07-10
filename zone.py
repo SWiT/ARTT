@@ -69,6 +69,7 @@ class Zone:
         self.cameraMatrix = None
         self.distCoefs = None
 
+        self.projector.renderCalibrationImage()
         self.projector.outputCalibrationImage()
         return
 

@@ -62,12 +62,6 @@ class Arena:
             gray = cv2.cvtColor(z.image, cv2.COLOR_BGR2GRAY)
             self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
 
-            if self.ids is not None:
-                if len(self.ids) == (z.projector.markercount):
-                    allfound = "!!!"
-                else:
-                    allfound = ""
-                #print len(self.ids),"found",allfound
 
             # If the zone is calibrated
 #            if z.calibrated:

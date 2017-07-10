@@ -11,7 +11,7 @@ class Zone:
         self.id = idx   # Zone ID
         self.vdi = idx  # Video ID
         self.videodevices = videodevices    # list of video devices
-        self.gridsize = (25, 18) # Grid size to apply to the zone.
+        self.gridsize = (36, 24) # Grid size to apply to the zone.
         self.v4l2ucp = -1   # Flag for v4l2ucp sub process
         self.cap = -1        # Capture device object (OpenCV)
         self.resolutions = [(1920,1080)] # new camera crashes if resolution is changed
@@ -26,8 +26,8 @@ class Zone:
 
         self.cameraMatrix = None
         self.distCoefs = None
-        self.rvecs = None
-        self.tvecs = None
+        self.newcameramtx = None
+
         self.warped = False
         self.warpwidth = 0
         self.warpheight = 0
@@ -68,8 +68,7 @@ class Zone:
         self.calibrated = False
         self.cameraMatrix = None
         self.distCoefs = None
-        self.rvecs = None
-        self.tvecs = None
+
         self.projector.outputCalibrationImage()
         return
 
@@ -167,21 +166,21 @@ class Zone:
         # Undistort the frame
 
         #img = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
-        img = self.image
-        h,  w = img.shape[:2]
-        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(self.cameraMatrix, self.distCoefs, (w, h), 1, (w, h))
-        dst = cv2.undistort(img, self.cameraMatrix, self.distCoefs, None, newcameramtx)
-        self.image = dst
+        #img = self.image
+        #h,  w = img.shape[:2]
+        #newcameramtx, roi = cv2.getOptimalNewCameraMatrix(self.cameraMatrix, self.distCoefs, (w, h), 1, (w, h))
+        self.image = cv2.undistort(self.image, self.cameraMatrix, self.distCoefs, None, self.newcameramtx)
+        #self.image = dst
         #print "roi:", roi
 
         # crop the image
 
-        x, y, w, h = roi
-        if w > 0 and h > 0:
-            dst = dst[y:y+h, x:x+w]
-            self.image  = dst
-            self.height = h
-            self.width  = w
+        #x, y, w, h = roi
+        #if w > 0 and h > 0:
+        #    dst = dst[y:y+h, x:x+w]
+        #    self.image  = dst
+        #    self.height = h
+        #    self.width  = w
 
         #self.image  = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
 #        if self.image is not None:

@@ -67,7 +67,7 @@ class Arena:
                     allfound = "!!!"
                 else:
                     allfound = ""
-                print len(self.ids),"found",allfound
+                #print len(self.ids),"found",allfound
 
             # If the zone is calibrated
 #            if z.calibrated:
@@ -163,9 +163,9 @@ class Arena:
                 pt1 = (z.width/2+5, z.height/2)
                 cv2.line(img, pt0, pt1, self.ui.COLOR_PURPLE, 1)
 
+
                 # Draw the markers
-                if not z.calibrated:
-                    outputImg = aruco.drawDetectedMarkers(z.image, z.corners)
+                img = aruco.drawDetectedMarkers(img, self.corners, self.ids)
 
 
                 if self.ui.displayAll():

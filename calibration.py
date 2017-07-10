@@ -3,7 +3,7 @@
 import cv2, os, time, re
 import cv2.aruco as aruco
 import numpy as np
-
+import json
 
 
 class Calibration:
@@ -13,17 +13,18 @@ class Calibration:
         self.COLOR_LBLUE = (255, 200, 100)
         self.COLOR_GREEN = (0,240,0)
         self.COLOR_RED = (0,0,255)
+        self.COLOR_DRED = (0,0,139)
         self.COLOR_YELLOW = (29,227,245)
         self.COLOR_PURPLE = (224,27,217)
         self.COLOR_GRAY = (127,127,127)
 
-        boardcols = 5
-        boardrows = 4
+        boardcols = 7
+        boardrows = 6
         boardsquaresize = 100
-        boardmarkersize = 50
-        boardmargin = 20
-        self.boardwidth = 800
-        self.boardheight = 600
+        boardmarkersize = 80
+        boardmargin = 0
+        boardwidth = 800
+        boardheight = 600
         self.markercount = (boardcols*boardrows)/2
 
         self.displaySize = 60
@@ -38,10 +39,10 @@ class Calibration:
         self.calibrationIds = []
 
         self.board = cv2.aruco.CharucoBoard_create(boardcols,boardrows,boardsquaresize,boardmarkersize, self.aruco_dict)
-        self.boardimage = self.board.draw((self.boardwidth,self.boardheight), marginSize=boardmargin)
-        cv2.imwrite('calibration_charuco.png', self.boardimage)
+        self.boardimage = self.board.draw((boardwidth,boardheight), marginSize=boardmargin, borderBits=1 )
+        cv2.imwrite('charuco_board.png', self.boardimage)
 
-        self.folder = "calibrationimages"
+        self.folder = "images"
 
         # Create the capture object
         self.imageWidth = 1920
@@ -53,72 +54,31 @@ class Calibration:
         self.image     = None
         self.grayimage = None
 
-        self.roiY = 4
-        self.roiX = 6
-        self.roiReady = np.zeros((self.roiY, self.roiX));
         self.roiPt0 = (0, 0)
-        self.roiPt1 = (0, 0)
-        self.roiWidth = self.imageWidth / (self.roiX + 1) * 2
-        self.roiHeight = self.imageHeight / (self.roiY + 1) * 2
-        self.roiCurr = [0, 0]
-        self.setROI()
+        self.roiPt1 = (0,0)
+        self.resetROI()
 
+        self.savenext = False
         self.calibrated = False
+        self.undistort = True
         self.exit = False
 
         self.cameraMatrix = None
         self.distCoefs = None
         self.rvecs = None
         self.tvecs = None
-        self.undistort = True
+        self.newcameramtx = None
+        self.roi = None
+
+        self.charucoCorners = None
+        self.charucoIds = None
+
         return
 
-
-    def nextUnreadyROI(self):
-        self.nextROI()
-        while self.isROIReady():
-            self.nextROI()
-            if self.allROIReady():
-                self.resetROI()
-                break;
-        return
-
-
-    def allROIReady(self):
-        return len(np.where(self.roiReady == 0)[0]) == 0
-
-
-    def nextROI(self):
-        self.roiCurr[0] += 1
-        if self.roiCurr[0] % self.roiX == 0:
-            self.roiCurr[0] = 0
-            self.roiCurr[1] += 1
-            if self.roiCurr[1] % self.roiY == 0:
-                self.roiCurr[1] = 0
-        self.setROI()
-        return
-
-
-    def setROI(self):
-        pt0 = 0 + int(self.roiWidth/2 * self.roiCurr[0])
-        pt1 = 0 + int(self.roiHeight/2 * self.roiCurr[1])
-        self.roiPt0 = (pt0, pt1)
-        pt0 = self.roiWidth + (self.roiWidth/2 * self.roiCurr[0]) - 1
-        pt1 = self.roiHeight + (self.roiHeight/2 * self.roiCurr[1]) - 1
-        self.roiPt1 = (pt0, pt1)
-        #print "roi:", self.roiCurr, self.roiPt0, self.roiPt1
-        return
-
-
+    # Reset the Region Of Interest to the whole image
     def resetROI(self):
         self.roiPt0 = (0, 0)
         self.roiPt1 = (self.imageWidth-1, self.imageHeight-1)
-        #print "roi:", "All", self.roiPt0, self.roiPt1
-        return
-
-
-    def isROIReady(self):
-        return self.roiReady[self.roiCurr[1], self.roiCurr[0]] == 1
 
     def scan(self):
         # Get the ROI
@@ -129,23 +89,41 @@ class Calibration:
         if self.corners is None or self.ids is None:
             self.ids = np.array([])
             self.corners = np.array([])
+            self.charucoCorners = np.array([])
+            self.charucoIds = np.array([])
+        else:
+            retval, self.charucoCorners, self.charucoIds = aruco.interpolateCornersCharuco(self.corners, self.ids, self.grayimage, self.board)
         return
 
 
-    def allFound(self):
+    def foundAllMarkers(self):
         return len(self.corners)==self.markercount and len(self.ids)==self.markercount
+
 
     def draw(self):
         # Get the ROI.
         roi = self.image[self.roiPt0[1]:self.roiPt1[1],self.roiPt0[0]:self.roiPt1[0]]
+
         # Draw detected markers.
-        aruco.drawDetectedMarkers(roi, self.corners, self.ids)
+        aruco.drawDetectedMarkers(roi, self.corners)
+
         # Put the ROI back.
         self.image[self.roiPt0[1]:self.roiPt1[1],self.roiPt0[0]:self.roiPt1[0]] = roi
 
+        #Draw the detected Charuco corners.
+        aruco.drawDetectedCornersCharuco(self.image, self.charucoCorners, cornerColor=self.COLOR_BLUE)
+
+        #Draw the detected calibration points.
+        for idx, corners in enumerate(self.calibrationCorners):
+            #print idx
+            #aruco.drawDetectedCornersCharuco(self.image, self.calibrationCorners[idx], self.calibrationIds[idx], self.COLOR_LBLUE)
+            aruco.drawDetectedCornersCharuco(self.image, self.calibrationCorners[idx], cornerColor=self.COLOR_LBLUE)
+
+        return
         #Draw region of interest
         cv2.rectangle(self.image, self.roiPt0, self.roiPt1, self.COLOR_PURPLE, 2)
-        return
+
+
 
 
     def resize(self):
@@ -168,14 +146,26 @@ class Calibration:
         self.grayimage = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         return
 
-
-    def calibrate(self):
+    def loadimages(self):
         self.calibrationCorners = []
         self.calibrationIds = []
-        print "Reading image files..."
+        print "Loading image files..."
+
+        if not os.path.isdir(self.folder):
+            os.mkdir(self.folder)
+            if not os.path.isdir(self.folder):
+                print "Error creating "+self.folder+"/"
+                exit();
+            else:
+                print "created "+self.folder+"/"
+
         listdir = os.listdir(self.folder)
+        if len(listdir) == 0:
+            print "No image files found in "+self.folder+"/"
+            return()
+
         listdir.sort()
-        self.resetROI()
+        foundallcount = 0
         for fn in listdir:
             fullpath = self.folder + "/" + fn
             self.image = cv2.imread(fullpath)
@@ -183,102 +173,125 @@ class Calibration:
 
             self.scan()
             foundmsg = ""
-            if self.allFound():
-                foundmsg = "All Found"
-                #if regex match
-                p = re.compile('(\d)_(\d)\.jpg')
-                m = p.match(fn)
-                if m:
-                    #print 'Match found: ', m.group(0), m.group(1), m.group(2)
-                    roiX = int(m.group(2))
-                    roiY = int(m.group(1))
-                    self.roiReady[roiY, roiX] = 1
-                
-                retval, charucoCorners, charucoIds = aruco.interpolateCornersCharuco(self.corners, self.ids, self.grayimage, self.board)
-                if charucoCorners is not None and charucoIds is not None and len(charucoCorners)>3:
-                    self.calibrationCorners.append(charucoCorners)
-                    self.calibrationIds.append(charucoIds)
+            if self.foundAllMarkers():
+                foundmsg = "Found All Markers"
+                if self.charucoCorners is not None and self.charucoIds is not None and len(self.charucoCorners)>3:
+                    self.calibrationCorners.append(self.charucoCorners)
+                    self.calibrationIds.append(self.charucoIds)
+                foundallcount += 1
 
             else:
                 foundmsg = "corners",len(self.corners),"ids",len(self.ids)
             self.display()
             print fn, foundmsg
-            cv2.waitKey(25)
+            cv2.waitKey(10)
 
-        print self.roiReady
+        print foundallcount,"images loaded."
+        return
 
-        if self.allROIReady():
-            # Ready to calibrate when all calibration image have been processed.
-            print "Calibrating..."
-            try:
-                retval, self.cameraMatrix, self.distCoefs, self.rvecs, self.tvecs = aruco.calibrateCameraCharuco(self.calibrationCorners, self.calibrationIds, self.board, self.grayimage.shape,None,None)
-                #print(retval, cameraMatrix, distCoeffs, rvecs, tvecs)
-                print "Calibration successful"
-                self.calibrated = True
-            except:
-                print "Calibration failed"
-                exit()
+    def calibrate(self):
+        self.loadimages()
+
+        # Ready to calibrate.
+        print "Calibrating..."
+        try:
+            retval, self.cameraMatrix, self.distCoefs, self.rvecs, self.tvecs = aruco.calibrateCameraCharuco(self.calibrationCorners, self.calibrationIds, self.board, self.grayimage.shape,None,None)
+            #print(retval, cameraMatrix, distCoeffs, rvecs, tvecs)
+
+            self.newcameramtx, self.roi = cv2.getOptimalNewCameraMatrix(self.cameraMatrix, self.distCoefs, (self.imageWidth, self.imageHeight), 1, (self.imageWidth, self.imageHeight))
+            #print(self.newcameramtx, self.roi)
+
+            print "Calibration successful"
+            self.calibrated = True
+        except:
+            print "Calibration failed"
+            exit()
+        return
+
+    def printCameraData(self):
+        print "cameraMatrix"
+        print type(self.cameraMatrix)
+        print self.cameraMatrix
+        print
+        print "distCoefs"
+        print type(self.distCoefs)
+        print self.distCoefs
+        print
+        print"newcameramtx"
+        print type(self.newcameramtx)
+        print self.newcameramtx
+        print
+        return
+
+    def saveconfig(self):
+        if self.calibrated:
+            self.printCameraData()
+            np.savez('calibration.npz', cameraMatrix=self.cameraMatrix, distCoefs=self.distCoefs, newcameramtx=self.newcameramtx)
+            print "calibration.npz saved."
+        else:
+            print "Not calibrated. Press 'C' to calibrate."
         return
 
 
-    def checkCalibrationFiles(self):
-        listdir = os.listdir(self.folder)
-        found = len(listdir)
-        print found,"images found."
-        return found == (self.roiX * self.roiY)
+    def loadconfig(self):
+        if not os.path.exists('calibration.npz'):
+            print "calibration.npz not found."
+            return
 
+        data = np.load('calibration.npz')
+        self.cameraMatrix = data['cameraMatrix']
+        self.distCoefs = data['distCoefs']
+        self.newcameramtx = data['newcameramtx']
+        self.printCameraData()
+        print "calibration.npz loaded."
+        return
 
 if __name__ == "__main__":
+    print "***************************************"
     print "SWiT's Camera Lens Calibration Script"
+    print "***************************************"
     print "Q or Esc to exit"
-    print "U to toggle undistorting"
     print "[Space] to save the next valid image"
+    print "L to load or reload images"
+    print "C to calibrate"
+    print "U to toggle undistorting"
+    print "R to reset"
+    print "S to save calibration.npz"
+    print "F to load calibration.npz"
+    print "***************************************"
 
     cv2.namedWindow("Calibration")
-
     cal = Calibration()
-    cal.calibrate()
-
-    cal.setROI()
-    cal.nextUnreadyROI()
 
     while not cal.exit:
         # Get the next frame.
         cal.getFrame()
+
         if cal.calibrated:
             if cal.undistort:
                 # Undistort the image
-                h,  w = cal.image.shape[:2]
-                newcameramtx, roi = cv2.getOptimalNewCameraMatrix(cal.cameraMatrix, cal.distCoefs, (w, h), 1, (w, h))
-                cal.image = cv2.undistort(cal.image, cal.cameraMatrix, cal.distCoefs, None, newcameramtx)
+                cal.image = cv2.undistort(cal.image, cal.cameraMatrix, cal.distCoefs, None, cal.newcameramtx)
+
+                if cal.roi is not None:
+                    #Draw region of interest
+                    cv2.rectangle(cal.image, (cal.roi[0], cal.roi[1]), (cal.roi[2], cal.roi[3]), cal.COLOR_PURPLE, 2)
 
         else:
-            if cal.allROIReady():
-                cal.calibrate()
+            # Scan the ROI
+            cal.scan()
 
-            else:
-                # Scan the ROI
-                cal.scan()
-                # If all markers found.
-                if cal.allFound():
-                    print "found all in ROI"
-                    # Now scan the whole image.
-                    cal.resetROI()
-                    cal.scan()
-                    # If all markers found.
-                    if cal.allFound():
-                        print "found all in whole image"
-                        # Set the ROI as ready for calibration
-                        cal.roiReady[cal.roiCurr[1], cal.roiCurr[0]] = 1
+            if len(cal.ids) > 0:
+                retval, charucoCorners, charucoIds = aruco.interpolateCornersCharuco(cal.corners, cal.ids, cal.grayimage, cal.board)
 
-                        # Save image
-                        fn = cal.folder+"/"+str(cal.roiCurr[1])+"_"+str(cal.roiCurr[0])+".jpg"
-                        cv2.imwrite(fn, cal.image)
-                        print "wrote",fn
+            # If all markers found.
+            if cal.foundAllMarkers() and cal.savenext:
+                # Save image
+                fn = cal.folder+"/"+time.strftime("%Y%m%d%H%M%S")+".png"
+                cv2.imwrite(fn, cal.image)
+                print "wrote",fn
+                cal.savenext = False
 
-                        # Next region
-                        cal.nextUnreadyROI()
-                cal.draw()
+            cal.draw()
 
         # Display the image or frame of video
         cal.resize()
@@ -287,13 +300,33 @@ if __name__ == "__main__":
         # Handle any command key presses.
         key = cv2.waitKey(1)
         if key & 0xFF == ord('q') or key == 27: # q or Esc to exit
-            break
+            cal.exit = True
+
         elif key & 0xFF == ord('u'):            # u to toggle undistorting the image once calibrated.
             cal.undistort = not cal.undistort
+
         elif key & 0xFF == ord(' '):            # [Space] to save next valid image
             print "Save Next."
-        #elif key != 255:
-        #    print "key",key
+            cal.savenext = True
+
+        elif key & 0xFF == ord('c'):            # c to run calibtaion on saved images
+            cal.calibrate()
+
+        elif key & 0xFF == ord('r'):            # r to reset
+            cal.calibrated = False
+
+        elif key & 0xFF == ord('l'):            # l to reload images
+            cal.loadimages()
+
+        elif key & 0xFF == ord('s'):            # s to save the calibration data to config.json
+            cal.saveconfig()
+
+        elif key & 0xFF == ord('f'):            # f to load the calibration data from calibration.npz
+            cal.loadconfig()
+            cal.calibrated = True
+
+        elif key != 255 and key != -1:
+            print "key",key
 
     #Exit
     cal.cap.release()

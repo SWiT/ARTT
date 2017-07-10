@@ -1,5 +1,5 @@
 import re, os, cv2, time, re, os
-from numpy import *
+import numpy as np
 
 import zone, ui, procman
 import cv2.aruco as aruco
@@ -127,10 +127,10 @@ class Arena:
                 widthAll += z.width
                 heightAll = z.height
             outputImg = zeros((heightAll, widthAll, 3), uint8)
-        elif size(self.zones) > 0:
-            outputImg = zeros((self.zones[self.ui.display].height, self.zones[self.ui.display].width, 3), uint8)
+        elif np.size(self.zones) > 0:
+            outputImg = np.zeros((self.zones[self.ui.display].height, self.zones[self.ui.display].width, 3), np.uint8)
         else:
-            outputImg = zeros((1080, 1920, 3), uint8)
+            outputImg = np.zeros((1080, 1920, 3), np.uint8)
 
         for z in self.zones:
             if z.calibrated:
@@ -142,7 +142,7 @@ class Arena:
             if self.ui.isDisplayed(z.id):
                 # Prepare image based on display mode.
                 if self.ui.displayMode == self.ui.DATAONLY:
-                    img = zeros((z.height, z.width, 3), uint8) # Create a blank image
+                    img = np.zeros((z.height, z.width, 3), uint8) # Create a blank image
                 else:
                     img = z.image
 

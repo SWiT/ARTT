@@ -1,5 +1,5 @@
 import cv2, time, re
-from numpy import *
+import numpy as np
 
 class UI:
     def __init__(self):
@@ -154,7 +154,7 @@ class UI:
         #Draw Control Panel
         self.pt = (0,self.lh)
         self.h = len(self.menurows)*self.lh+5 #calculate window height
-        controlPanelImg = zeros((self.h,self.w,3), uint8) #create a blank image for the control panel
+        controlPanelImg = np.zeros((self.h,self.w,3), np.uint8) #create a blank image for the control panel
         menutextcolor = (255,255,255)
         self.menurows = []
 
@@ -243,7 +243,7 @@ class UI:
 
     def resize(self, img):
         # Resize output image
-        if size(img,1) > 0 and size(img,0) > 0 and 0 < self.displaySize < 100:
+        if np.size(img,1) > 0 and np.size(img,0) > 0 and 0 < self.displaySize < 100:
             r = float(self.displaySize)/100
             img = cv2.resize(img, (0,0), fx=r, fy=r)
         return img

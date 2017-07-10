@@ -1,6 +1,6 @@
 import cv2
 import cv2.aruco as aruco
-from numpy import *
+import numpy as np
 from utils import *
 
 class Projector:
@@ -35,7 +35,7 @@ class Projector:
         # TODO: Option to load a base map image
 
         # Create a empty white image.
-        self.baseimg = zeros((self.height,self.width,3), uint8)
+        self.baseimg = np.zeros((self.height,self.width,3), np.uint8)
         self.baseimg[:,:] = (255,255,255)
 
         # Draw the arena border

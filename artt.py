@@ -1,5 +1,5 @@
 import cv2
-from numpy import *
+import numpy as np
 
 import arena
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
         outputimg = Arena.render()
 
         # Display the image or frame of video
-        if size(outputimg,0) > 0 and size(outputimg,1) > 0:
+        if np.size(outputimg,0) > 0 and np.size(outputimg,1) > 0:
             outputimg = Arena.ui.resize(outputimg)
             cv2.imshow("ArenaScanner", outputimg)
 

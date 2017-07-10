@@ -1,6 +1,6 @@
 import cv2, subprocess, os
 import cv2.aruco as aruco
-from numpy import *
+import numpy as np
 from utils import *
 import projector
 
@@ -56,7 +56,7 @@ class Zone:
         if not os.path.exists('calibration.npz'):
             print "calibration.npz not found."
         else:
-            data = load('calibration.npz')
+            data = np.load('calibration.npz')
             self.cameraMatrix = data['cameraMatrix']
             self.distCoefs = data['distCoefs']
             self.newcameramtx = data['newcameramtx']

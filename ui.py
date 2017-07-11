@@ -166,16 +166,16 @@ class UI:
         for z in Arena.zones:
             output = str(z.id)+": "
             cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
-            output = z.videodevices[z.vdi][5:] if z.vdi > -1 else "Off"
+            output = z.camera.device
             cv2.putText(controlPanelImg, output, (self.pt[0]+28,self.pt[1]), cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
-            output = str(z.resolutions[z.ri][0])+"x"+str(z.resolutions[z.ri][1])
-            cv2.putText(controlPanelImg, output, (self.pt[0]+125,self.pt[1]), cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
             output = "settings"
             cv2.putText(controlPanelImg, output, (self.pt[0]+270,self.pt[1]-2), cv2.FONT_HERSHEY_PLAIN, 1.0, menutextcolor, 1)
             self.menurows.append("videoDevice"+str(z.id))
             self.nextrow()
+            output = str(z.camera.width)+"x"+str(z.camera.height)
+            cv2.putText(controlPanelImg, output, (self.pt[0],self.pt[1]), cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
             output = " "+str(z.width)+"x"+str(z.height)
-            cv2.putText(controlPanelImg, output, self.pt, cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
+            cv2.putText(controlPanelImg, output, (self.pt[0]+150,self.pt[1]), cv2.FONT_HERSHEY_PLAIN, 1.5, menutextcolor, 1)
             self.menurows.append("calibartedres"+str(z.id))
             self.nextrow()
             output = " Flip projector: "+str(z.projector.flip)

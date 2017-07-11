@@ -24,21 +24,19 @@ if __name__ == '__main__':
         # Scan the arena for symbols.
         Arena.scan()
 
-        # Render the output of the arena.
-        outputimg = Arena.render()
-
-        # Display the image or frame of video
-        if np.size(outputimg,0) > 0 and np.size(outputimg,1) > 0:
-            outputimg = Arena.ui.resize(outputimg)
-            cv2.imshow("ArenaScanner", outputimg)
+        # Render the output of the arena scanning.
+        image = Arena.render()
+        if np.size(image,0) > 0 and np.size(image,1) > 0:
+            image = Arena.ui.resize(image)
+            cv2.imshow("ArenaScanner", image)
 
         # Display the control panel
         controlPanelImg = Arena.ui.drawControlPanel(Arena)
         cv2.imshow("ArenaControlPanel", controlPanelImg)
 
+        # Display the projectors
         for z in Arena.zones:
-            # Display the projector
-            cv2.imshow("ZoneProjector"+str(z.id), z.projector.outputimg)
+            cv2.imshow("ZoneProjector"+str(z.id), z.projector.image)
 
         Arena.ui.calcFPS()
 

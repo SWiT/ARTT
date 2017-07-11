@@ -11,7 +11,7 @@ class Projector:
         self.flip = False
         self.baseimg        = None  # Base map texture on top of which output is drawn.
         self.calibrationimg = None  # The calibration image for lens adjustments.
-        self.outputimg      = None  # The image being output by the projector.
+        self.image          = None  # The image being output by the projector.
         self.maxcalmarkerid = None  # Maximum marker id used by the calibration image
         self.outputtype     = None  # Type of output (zone, calibration)
         self.calibrated     = False
@@ -52,9 +52,9 @@ class Projector:
         return
 
     def outputZoneImage(self):
-        self.outputimg = self.baseimg.copy()
+        self.image = self.baseimg.copy()
         self.outputtype = "zone"
-        return self.outputimg
+        return self.image
 
     def renderCalibrationImage(self):
         # Create a empty white image.
@@ -65,7 +65,7 @@ class Projector:
             marker = cv2.cvtColor(aruco.drawMarker(self.aruco_dict, markerid, self.markersize, borderBits=1), cv2.COLOR_GRAY2BGR)
             self.calibrationimg[self.markerpos[markerid][0]:self.markerpos[markerid][0]+self.markersize, self.markerpos[markerid][1]:self.markerpos[markerid][1]+self.markersize] = marker
 
-        # Crosshair in center outputImg
+        # Crosshair in center output image
         s = 20
         pt0 = (self.width/2, self.height/2-s)
         pt1 = (self.width/2, self.height/2+s)
@@ -80,7 +80,7 @@ class Projector:
         return
 
     def outputCalibrationImage(self):
-        self.outputimg = self.calibrationimg.copy()
+        self.image = self.calibrationimg.copy()
         self.outputtype = "calibrate"
-        return self.outputimg
+        return self.image
 

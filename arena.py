@@ -59,14 +59,7 @@ class Arena:
             z.getImage()
             timestamp = time.time()
 
-            gray = cv2.cvtColor(z.image, cv2.COLOR_BGR2GRAY)
-            self.corners, self.ids, self.rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
-
-
-            # If the zone is calibrated
-#            if z.calibrated:
-                # Warp the zone part of the image and make it rectangular.
-#                z.warpImage()
+            z.scan()
 
                 # Handle any returned symbol data.
 #                while self.procman.resultsAvailable():
@@ -100,73 +93,10 @@ class Arena:
 #                # Scan for a new symbol.
 #                self.procman.addProcess(timestamp, self.scantimeout, z.image)
 
-
-            # If the zone is not calibrated
-            #else:
-
-            #    print "not calibrated."
-
-
-
-        #End of zone loop
         return
 
     def render(self):
-        # Start Output Image
-        # Create a blank image
-        if self.ui.displayAll():
-            widthAll = 0
-            heightAll = 0
-            for z in self.zones:
-                widthAll += z.width
-                heightAll = z.height
-            outputImg = zeros((heightAll, widthAll, 3), uint8)
-        elif np.size(self.zones) > 0:
-            outputImg = np.zeros((self.zones[self.ui.display].height, self.zones[self.ui.display].width, 3), np.uint8)
-        else:
-            outputImg = np.zeros((1080, 1920, 3), np.uint8)
-
         for z in self.zones:
-            if z.calibrated:
-                #z.projector.outputZoneImage()
-                z.projector.outputCalibrationImage()
-            else:
-                z.projector.outputCalibrationImage()
-
-            if self.ui.isDisplayed(z.id):
-                # Prepare image based on display mode.
-                if self.ui.displayMode == self.ui.DATAONLY:
-                    img = np.zeros((z.height, z.width, 3), uint8) # Create a blank image
-                else:
-                    img = z.image
-
-                # If we are only displaying the source image we are done.
-                if self.ui.displayMode == self.ui.SOURCE:
-                    if self.ui.displayAll():
-                        outputImg[0:z.height, z.id*z.width:(z.id+1)*z.width] = img
-                    else:
-                        outputImg = img
-                    continue;
-
-                # Draw Objects on Scanner window
-                # Crosshair in centeroutputImg
-                pt0 = (z.width/2, z.height/2-5)
-                pt1 = (z.width/2, z.height/2+5)
-                cv2.line(img, pt0, pt1, self.ui.COLOR_PURPLE, 1)
-                pt0 = (z.width/2-5, z.height/2)
-                pt1 = (z.width/2+5, z.height/2)
-                cv2.line(img, pt0, pt1, self.ui.COLOR_PURPLE, 1)
-
-
-                # Draw the markers
-                img = aruco.drawDetectedMarkers(img, self.corners, self.ids)
-
-
-                if self.ui.displayAll():
-                    outputImg[0:z.height, z.id*z.width:(z.id+1)*z.width] = img
-                else:
-                    outputImg = img
-
-
+            outputImg = z.render()
         return outputImg
 

@@ -14,16 +14,18 @@ class Projector:
         self.outputimg      = None  # The image being output by the projector.
         self.maxcalmarkerid = None  # Maximum marker id used by the calibration image
         self.outputtype     = None  # Type of output (zone, calibration)
-        self.board          = None
+        self.calibrated     = False
+
+        self.markersize = 100
+        margin = 10
+        self.markerpos = [(margin, margin)
+                        ,(self.height-self.markersize-margin, margin)
+                        ,(self.height-self.markersize-margin, self.width-self.markersize-margin)
+                        ,(margin, self.width-self.markersize-margin)
+                        ]
 
         self.aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)   # Prepare the marker dictionary.
 
-        # Set the marker size and margin.
-        self.markersize = 48
-        self.spacer = 48
-        self.outermargin = 16
-        self.rows = 0
-        self.cols = 0
         self.calibrationpoints = []
 
         self.renderZoneImage()
@@ -59,23 +61,19 @@ class Projector:
         self.calibrationimg = np.zeros((self.height,self.width,3), np.uint8)
         self.calibrationimg[:,:] = (255,255,255)
 
-        markerid = 0
-        markersize = 50
-        marginsize = 5
-        marker = cv2.cvtColor(aruco.drawMarker(self.aruco_dict, markerid, markersize, borderBits=1), cv2.COLOR_GRAY2BGR)
-        self.calibrationimg[0+marginsize:markersize+marginsize, 0+marginsize:markersize+marginsize] = marker
+        for markerid in range(0,4):
+            marker = cv2.cvtColor(aruco.drawMarker(self.aruco_dict, markerid, self.markersize, borderBits=1), cv2.COLOR_GRAY2BGR)
+            self.calibrationimg[self.markerpos[markerid][0]:self.markerpos[markerid][0]+self.markersize, self.markerpos[markerid][1]:self.markerpos[markerid][1]+self.markersize] = marker
 
-        markerid = 1
-        marker = cv2.cvtColor(aruco.drawMarker(self.aruco_dict, markerid, markersize, borderBits=1), cv2.COLOR_GRAY2BGR)
-        self.calibrationimg[self.height-markersize-marginsize:self.height-marginsize, 0+marginsize:markersize+marginsize] = marker
+        # Crosshair in center outputImg
+        s = 20
+        pt0 = (self.width/2, self.height/2-s)
+        pt1 = (self.width/2, self.height/2+s)
+        cv2.line(self.calibrationimg, pt0, pt1, (0,0,0), 2)
+        pt0 = (self.width/2-s, self.height/2)
+        pt1 = (self.width/2+s, self.height/2)
+        cv2.line(self.calibrationimg, pt0, pt1, (0,0,0), 2)
 
-        markerid = 2
-        marker = cv2.cvtColor(aruco.drawMarker(self.aruco_dict, markerid, markersize, borderBits=1), cv2.COLOR_GRAY2BGR)
-        self.calibrationimg[self.height-markersize-marginsize:self.height-marginsize, self.width-markersize-marginsize:self.width-marginsize] = marker
-
-        markerid = 3
-        marker = cv2.cvtColor(aruco.drawMarker(self.aruco_dict, markerid, markersize, borderBits=1), cv2.COLOR_GRAY2BGR)
-        self.calibrationimg[0+marginsize:markersize+marginsize, self.width-markersize-marginsize:self.width-marginsize] = marker
         if self.flip:
             self.calibrationimg = cv2.flip(self.calibrationimg, 1) # Flip X axis
 

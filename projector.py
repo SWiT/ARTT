@@ -76,7 +76,6 @@ class Projector:
             self.calibrationimg[y0:y1, x0:x1] = marker
 
         # Crosshair in center output image
-        s = 20
         pt0 = (0, self.height/2)
         pt1 = (self.width, self.height/2)
         cv2.line(self.calibrationimg, pt0, pt1, (0,0,0), 2)

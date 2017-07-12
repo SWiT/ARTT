@@ -8,7 +8,7 @@ class Projector:
     def __init__(self, height, width):
         self.width = width
         self.height = height
-        self.flip = False
+        self.flip = True
         self.baseimg        = None  # Base map texture on top of which output is drawn.
         self.calibrationimg = None  # The calibration image for lens adjustments.
         self.image          = None  # The image being output by the projector.
@@ -17,11 +17,13 @@ class Projector:
         self.calibrated     = False
 
         self.markersize = 100
-        margin = 10
+        margin = 0
+        self.markerborder = self.markersize/6
+        self.markertotalsize = self.markersize + self.markerborder * 2
         self.markerpos = [(margin, margin)
-                        ,(self.height-self.markersize-margin, margin)
-                        ,(self.height-self.markersize-margin, self.width-self.markersize-margin)
-                        ,(margin, self.width-self.markersize-margin)
+                        ,(self.height-self.markertotalsize-margin, margin)
+                        ,(self.height-self.markertotalsize-margin, self.width-self.markertotalsize-margin)
+                        ,(margin, self.width-self.markertotalsize-margin)
                         ]
 
         self.aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)   # Prepare the marker dictionary.
@@ -57,21 +59,29 @@ class Projector:
         return self.image
 
     def renderCalibrationImage(self):
-        # Create a empty white image.
+        # Create a empty image.
         self.calibrationimg = np.zeros((self.height,self.width,3), np.uint8)
-        self.calibrationimg[:,:] = (255,255,255)
+        self.calibrationimg[:,:] = (127,127,127) #TODO: Make this adjustable via the control panel
 
         for markerid in range(0,4):
             marker = cv2.cvtColor(aruco.drawMarker(self.aruco_dict, markerid, self.markersize, borderBits=1), cv2.COLOR_GRAY2BGR)
-            self.calibrationimg[self.markerpos[markerid][0]:self.markerpos[markerid][0]+self.markersize, self.markerpos[markerid][1]:self.markerpos[markerid][1]+self.markersize] = marker
+            b = self.markerborder
+            marker = cv2.copyMakeBorder(marker, b, b, b, b, cv2.BORDER_CONSTANT, value=[255,255,255])
+            print marker.shape
+            y0 = self.markerpos[markerid][0]
+            y1 = self.markerpos[markerid][0] + self.markertotalsize
+            x0 = self.markerpos[markerid][1]
+            x1 = self.markerpos[markerid][1] + self.markertotalsize
+            print y0, y1, x0, x1
+            self.calibrationimg[y0:y1, x0:x1] = marker
 
         # Crosshair in center output image
         s = 20
-        pt0 = (self.width/2, self.height/2-s)
-        pt1 = (self.width/2, self.height/2+s)
+        pt0 = (0, self.height/2)
+        pt1 = (self.width, self.height/2)
         cv2.line(self.calibrationimg, pt0, pt1, (0,0,0), 2)
-        pt0 = (self.width/2-s, self.height/2)
-        pt1 = (self.width/2+s, self.height/2)
+        pt0 = (self.width/2, 0)
+        pt1 = (self.width/2, self.height)
         cv2.line(self.calibrationimg, pt0, pt1, (0,0,0), 2)
 
         if self.flip:

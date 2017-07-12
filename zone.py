@@ -37,6 +37,15 @@ class Zone:
 
     def scan(self):
         self.detectedCorners, self.detectedIds, self.rejectedPoints = aruco.detectMarkers(self.grayimage, self.aruco_dict, parameters=self.parameters)
+        if not self.projector.calibrated and self.detectedIds is not None:
+            #print 0 in self.detectedIds, 1 in self.detectedIds, 2 in self.detectedIds, 3 in self.detectedIds
+            # If 0 and 1 found move them left
+            if 0 in self.detectedIds and 1 in self.detectedIds:
+                y,x = self.projector.markerpos[0]
+                self.projector.markerpos[0] = (y, x-10)
+
+                y,x = self.projector.markerpos[1]
+                self.projector.markerpos[1] = (y, x-10)
         return
 
 

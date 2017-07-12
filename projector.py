@@ -87,6 +87,7 @@ class Projector:
         return
 
     def outputCalibrationImage(self):
+        self.renderCalibrationImage()
         self.image = self.calibrationimg.copy()
         self.outputtype = "calibrate"
         return self.image

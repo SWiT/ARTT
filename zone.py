@@ -34,6 +34,26 @@ class Zone:
         self.parameters         = aruco.DetectorParameters_create()
         return
 
+    def moveMarker(self, markerid, direction, amount):
+        y,x = self.projector.markerpos[markerid]
+        if direction == "left":
+            x -= amount
+            if x < 0:
+                x = 0
+        elif direction == "right":
+            x += amount
+            if x > self.projector.width - self.projector.markertotalsize:
+                x = self.projector.width - self.projector.markertotalsize
+        elif direction == "up":
+            y -= amount
+            if y < 0:
+                y = 0
+        elif direction == "down":
+            y += amount
+            if y > self.projector.height - self.projector.markertotalsize:
+                y = self.projector.height - self.projector.markertotalsize
+        self.projector.markerpos[markerid] = (y, x)
+        return
 
     def scan(self):
         self.detectedCorners, self.detectedIds, self.rejectedPoints = aruco.detectMarkers(self.grayimage, self.aruco_dict, parameters=self.parameters)
@@ -41,11 +61,20 @@ class Zone:
             #print 0 in self.detectedIds, 1 in self.detectedIds, 2 in self.detectedIds, 3 in self.detectedIds
             # If 0 and 1 found move them left
             if 0 in self.detectedIds and 1 in self.detectedIds:
-                y,x = self.projector.markerpos[0]
-                self.projector.markerpos[0] = (y, x-10)
+                self.moveMarker(0, "left", 5)
+                self.moveMarker(1, "left", 5)
 
-                y,x = self.projector.markerpos[1]
-                self.projector.markerpos[1] = (y, x-10)
+            if 1 in self.detectedIds and 2 in self.detectedIds:
+                self.moveMarker(1, "down", 5)
+                self.moveMarker(2, "down", 5)
+
+            if 2 in self.detectedIds and 3 in self.detectedIds:
+                self.moveMarker(2, "right", 5)
+                self.moveMarker(3, "right", 5)
+
+            if 3 in self.detectedIds and 0 in self.detectedIds:
+                self.moveMarker(3, "up", 5)
+                self.moveMarker(0, "up", 5)
         return
 
 

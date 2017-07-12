@@ -20,10 +20,10 @@ class Projector:
         margin = 0
         self.markerborder = self.markersize/6
         self.markertotalsize = self.markersize + self.markerborder * 2
-        self.markerpos = [(margin, margin)
-                        ,(self.height-self.markertotalsize-margin, margin)
-                        ,(self.height-self.markertotalsize-margin, self.width-self.markertotalsize-margin)
-                        ,(margin, self.width-self.markertotalsize-margin)
+        self.markerpos = [(self.height/2 - self.markertotalsize, self.width/2 - self.markertotalsize)
+                        ,(self.height/2, self.width/2 - self.markertotalsize)
+                        ,(self.height/2, self.width/2)
+                        ,(self.height/2 - self.markertotalsize, self.width/2)
                         ]
 
         self.aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)   # Prepare the marker dictionary.
@@ -67,12 +67,10 @@ class Projector:
             marker = cv2.cvtColor(aruco.drawMarker(self.aruco_dict, markerid, self.markersize, borderBits=1), cv2.COLOR_GRAY2BGR)
             b = self.markerborder
             marker = cv2.copyMakeBorder(marker, b, b, b, b, cv2.BORDER_CONSTANT, value=[255,255,255])
-            print marker.shape
             y0 = self.markerpos[markerid][0]
             y1 = self.markerpos[markerid][0] + self.markertotalsize
             x0 = self.markerpos[markerid][1]
             x1 = self.markerpos[markerid][1] + self.markertotalsize
-            print y0, y1, x0, x1
             self.calibrationimg[y0:y1, x0:x1] = marker
 
         # Crosshair in center output image

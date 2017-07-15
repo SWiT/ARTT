@@ -60,7 +60,7 @@ class Arena:
             timestamp = time.time()
 
             z.scan()
-
+            z.resolve()
                 # Handle any returned symbol data.
 #                while self.procman.resultsAvailable():
 #                    data = self.procman.getResult()

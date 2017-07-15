@@ -1,4 +1,4 @@
-import cv2, subprocess, os
+import cv2, subprocess, os, time
 import cv2.aruco as aruco
 import numpy as np
 
@@ -21,74 +21,26 @@ class Zone:
 
         # Initialize the project for the zone.
         # Set the projector image height and width to a little more than the projector's native resolution.
-        self.projector = projector.Projector(600, 800)
+        self.projector = projector.Projector(self)
         cv2.namedWindow("ZoneProjector"+str(idx), cv2.WND_PROP_FULLSCREEN)
 
         self.camera = camera.Camera(1080, 1920, "/dev/video0")
         self.calibrated = False
-        self.calibrationCorners = [0,1,2,3]
         self.detectedCorners    = []
         self.detectedIds        = []
         self.rejectedPoints     = []
-        self.aruco_dict         = aruco.Dictionary_get(aruco.DICT_4X4_50)
+        self.arucodict         = aruco.Dictionary_get(aruco.DICT_4X4_50)
         self.parameters         = aruco.DetectorParameters_create()
         return
 
-    def moveMarker(self, markerid, direction, amount):
-        y,x = self.projector.markerpos[markerid]
-        if direction == "left":
-            x -= amount
-            if x < 0:
-                x = 0
-        elif direction == "right":
-            x += amount
-            if x > self.projector.width - self.projector.markertotalsize:
-                x = self.projector.width - self.projector.markertotalsize
-        elif direction == "up":
-            y -= amount
-            if y < 0:
-                y = 0
-        elif direction == "down":
-            y += amount
-            if y > self.projector.height - self.projector.markertotalsize:
-                y = self.projector.height - self.projector.markertotalsize
-        self.projector.markerpos[markerid] = (y, x)
-        return
-
-
-    def moveMarkers(self, markerids, direction, amount):
-        for markerid in markerids:
-            self.moveMarker(markerid, direction, amount)
-        return
-
-
     def scan(self):
-        self.detectedCorners, self.detectedIds, self.rejectedPoints = aruco.detectMarkers(self.grayimage, self.aruco_dict, parameters=self.parameters)
-        if not self.projector.calibrated and self.detectedIds is not None:
-
-            # If 0 and 1 found move them left
-            if 0 in self.detectedIds and 1 in self.detectedIds:
-                self.moveMarkers((0,1), "left", 5)
-            else:
-                self.moveMarkers((0,1), "right", 1)
-
-            if 1 in self.detectedIds and 2 in self.detectedIds:
-                self.moveMarkers((1,2), "down", 5)
-            else:
-                self.moveMarkers((1,2), "up", 1)
-
-            if 2 in self.detectedIds and 3 in self.detectedIds:
-                self.moveMarkers((2,3), "right", 5)
-            else:
-                self.moveMarkers((2,3), "left", 1)
-
-            if 3 in self.detectedIds and 0 in self.detectedIds:
-                self.moveMarkers((3,0), "up", 5)
-            else:
-                self.moveMarkers((3,0), "down", 1)
-        print self.calibrationCorners
+        self.detectedCorners, self.detectedIds, self.rejectedPoints = aruco.detectMarkers(self.grayimage, self.arucodict, parameters=self.parameters)
         return
 
+    def resolve(self):
+        if not self.projector.calibrated:
+            self.projector.resolve()
+        return
 
     def recalibrate(self):
         self.calibrated = False

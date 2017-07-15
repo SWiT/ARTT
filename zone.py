@@ -26,7 +26,7 @@ class Zone:
 
         self.camera = camera.Camera(1080, 1920, "/dev/video0")
         self.calibrated = False
-        self.calibrationCorners = []
+        self.calibrationCorners = [0,1,2,3]
         self.detectedCorners    = []
         self.detectedIds        = []
         self.rejectedPoints     = []
@@ -55,26 +55,38 @@ class Zone:
         self.projector.markerpos[markerid] = (y, x)
         return
 
+
+    def moveMarkers(self, markerids, direction, amount):
+        for markerid in markerids:
+            self.moveMarker(markerid, direction, amount)
+        return
+
+
     def scan(self):
         self.detectedCorners, self.detectedIds, self.rejectedPoints = aruco.detectMarkers(self.grayimage, self.aruco_dict, parameters=self.parameters)
         if not self.projector.calibrated and self.detectedIds is not None:
-            #print 0 in self.detectedIds, 1 in self.detectedIds, 2 in self.detectedIds, 3 in self.detectedIds
+            
             # If 0 and 1 found move them left
             if 0 in self.detectedIds and 1 in self.detectedIds:
-                self.moveMarker(0, "left", 5)
-                self.moveMarker(1, "left", 5)
+                self.moveMarkers((0,1), "left", 5)
+            else:
+                self.moveMarkers((0,1), "right", 1)
 
             if 1 in self.detectedIds and 2 in self.detectedIds:
-                self.moveMarker(1, "down", 5)
-                self.moveMarker(2, "down", 5)
+                self.moveMarkers((1,2), "down", 5)
+            else:
+                self.moveMarkers((1,2), "up", 1)
 
             if 2 in self.detectedIds and 3 in self.detectedIds:
-                self.moveMarker(2, "right", 5)
-                self.moveMarker(3, "right", 5)
+                self.moveMarkers((2,3), "right", 5)
+            else:0
+                self.moveMarkers((2,3), "left", 1)
 
             if 3 in self.detectedIds and 0 in self.detectedIds:
-                self.moveMarker(3, "up", 5)
-                self.moveMarker(0, "up", 5)
+                self.moveMarkers((3,0), "up", 5)
+            else:
+                self.moveMarkers((3,0), "down", 1)
+        print self.calibrationCorners
         return
 
 

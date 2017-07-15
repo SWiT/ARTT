@@ -1,4 +1,4 @@
-import cv2
+import cv2, time
 import cv2.aruco as aruco
 import numpy as np
 from utils import *
@@ -22,10 +22,11 @@ class CalibrationMarker:
         elif markerid == 3:
             pos = (projector.height/2 - self.sizewithborder, projector.width/2)
         self.pos = pos
+        self.calpos = pos
 
         # Draw marker image with a white border
-        aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)   # Prepare the marker dictionary.
-        self.image = cv2.cvtColor(aruco.drawMarker(aruco_dict, markerid, self.size, borderBits=1), cv2.COLOR_GRAY2BGR)
+        arucodict = aruco.Dictionary_get(aruco.DICT_4X4_50)   # Prepare the marker dictionary.
+        self.image = cv2.cvtColor(aruco.drawMarker(arucodict, markerid, self.size, borderBits=1), cv2.COLOR_GRAY2BGR)
         b = self.border
         self.image = cv2.copyMakeBorder(self.image, b, b, b, b, cv2.BORDER_CONSTANT, value=[255,255,255])
 
@@ -36,7 +37,16 @@ class CalibrationMarker:
 
 
     def resolve(self):
-        print self.markerid
+        #print "----------"
+        detectedIds = self.projector.zone.detectedIds
+        if detectedIds is not None:
+            if self.markerid in self.projector.zone.detectedIds:
+                idx = list(detectedIds).index([self.markerid])
+                self.lastseen = time.time()
+                #print self.markerid, self.lastseen
+                self.calpos = self.projector.zone.detectedCorners[idx][0][self.markerid]
+                #print self.calpos
+
         return
 
     def moveMarker(self, markerid, direction, amount):

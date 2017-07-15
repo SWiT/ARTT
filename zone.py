@@ -26,10 +26,10 @@ class Zone:
 
         self.camera = camera.Camera(1080, 1920, "/dev/video0")
         self.calibrated = False
-        self.detectedCorners    = []
-        self.detectedIds        = []
-        self.rejectedPoints     = []
-        self.arucodict         = aruco.Dictionary_get(aruco.DICT_4X4_50)
+        self.detectedCorners    = None
+        self.detectedIds        = None
+        self.rejectedPoints     = None
+        self.arucodict          = aruco.Dictionary_get(aruco.DICT_4X4_50)
         self.parameters         = aruco.DetectorParameters_create()
         return
 
@@ -82,9 +82,19 @@ class Zone:
         pt1 = (self.width/2+5, self.height/2)
         cv2.line(outputImg, pt0, pt1, self.arena.ui.COLOR_PURPLE, 1)
 
-        # Draw the markers
+        # Draw the detected markers
         outputImg = aruco.drawDetectedMarkers(outputImg, self.detectedCorners, self.detectedIds)
 
+        # Draw the projectors calibration points.
+        region = []
+        for cm in self.projector.calmarker:
+            region.append(list(cm.calpos))
+#        print region
+#        pts = np.array(region, np.float32)
+#        outputImg = cv2.polylines(outputImg, [pts], True, self.arena.ui.COLOR_BLUE)
+        pts = np.array(region, np.int32)
+        pts = pts.reshape((-1,1,2))
+        cv2.polylines(outputImg, [pts], True, self.arena.ui.COLOR_BLUE)
         return outputImg
 
 

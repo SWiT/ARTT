@@ -65,7 +65,7 @@ class Zone:
     def scan(self):
         self.detectedCorners, self.detectedIds, self.rejectedPoints = aruco.detectMarkers(self.grayimage, self.aruco_dict, parameters=self.parameters)
         if not self.projector.calibrated and self.detectedIds is not None:
-            
+
             # If 0 and 1 found move them left
             if 0 in self.detectedIds and 1 in self.detectedIds:
                 self.moveMarkers((0,1), "left", 5)
@@ -79,7 +79,7 @@ class Zone:
 
             if 2 in self.detectedIds and 3 in self.detectedIds:
                 self.moveMarkers((2,3), "right", 5)
-            else:0
+            else:
                 self.moveMarkers((2,3), "left", 1)
 
             if 3 in self.detectedIds and 0 in self.detectedIds:

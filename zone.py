@@ -89,12 +89,10 @@ class Zone:
         region = []
         for cm in self.projector.calmarker:
             region.append(list(cm.calpos))
-#        print region
-#        pts = np.array(region, np.float32)
-#        outputImg = cv2.polylines(outputImg, [pts], True, self.arena.ui.COLOR_BLUE)
         pts = np.array(region, np.int32)
         pts = pts.reshape((-1,1,2))
-        cv2.polylines(outputImg, [pts], True, self.arena.ui.COLOR_BLUE)
+        cv2.polylines(outputImg, [pts], True, self.arena.ui.COLOR_BLUE, thickness = 2)
+
         return outputImg
 
 

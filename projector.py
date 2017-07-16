@@ -16,11 +16,12 @@ class CalibrationMarker:
         if markerid == 0:
             pos = (projector.height/2 - self.sizewithborder, projector.width/2 - self.sizewithborder)
         elif markerid == 1:
-            pos = (projector.height/2, projector.width/2 - self.sizewithborder)
+            pos = (projector.height/2 - self.sizewithborder, projector.width/2)
         elif markerid == 2:
             pos =(projector.height/2, projector.width/2)
         elif markerid == 3:
-            pos = (projector.height/2 - self.sizewithborder, projector.width/2)
+            pos = (projector.height/2, projector.width/2 - self.sizewithborder)
+
         self.pos = pos
         self.calpos = pos
 
@@ -43,9 +44,8 @@ class CalibrationMarker:
             if self.markerid in self.projector.zone.detectedIds:
                 idx = list(detectedIds).index([self.markerid])
                 self.lastseen = time.time()
-                #print self.markerid, self.lastseen
                 self.calpos = self.projector.zone.detectedCorners[idx][0][self.markerid]
-                #print self.calpos
+                print self.markerid, self.projector.zone.detectedCorners[idx][0], self.calpos
 
         return
 

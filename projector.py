@@ -23,6 +23,7 @@ class CalibrationMarker:
             pos = (projector.height/2, projector.width/2 - self.sizewithborder)
 
         self.pos = pos
+        self.startpos = pos
         self.calpos = pos
 
         # Draw marker image with a white border
@@ -33,41 +34,56 @@ class CalibrationMarker:
 
         self.lastmove = ""
         self.lastseen = 0
-        self.maxtime = 1000 #ms?
+        self.maxtime = 3.0 # seconds
         return
 
 
     def resolve(self):
-        #print "----------"
         detectedIds = self.projector.zone.detectedIds
-        if detectedIds is not None:
-            if self.markerid in self.projector.zone.detectedIds:
-                idx = list(detectedIds).index([self.markerid])
-                self.lastseen = time.time()
-                self.calpos = self.projector.zone.detectedCorners[idx][0][self.markerid]
-                print self.markerid, self.projector.zone.detectedCorners[idx][0], self.calpos
+        # Marker was found
+        if detectedIds is not None and self.markerid in self.projector.zone.detectedIds:
+            idx = list(detectedIds).index([self.markerid])
+            self.lastseen = time.time()
+            self.calpos = self.projector.zone.detectedCorners[idx][0][self.markerid]
+            if self.markerid == 0:
+                if self.lastmove == "left" or self.lastmove == "right":
+                    self.moveMarker("up", 2)
+                else:
+                    self.moveMarker("left", 6)
+
+
+        # Marker was not found for maxtime.
+        elif time.time() - self.lastseen >= self.maxtime:
+            if self.markerid == 0:
+                if self.lastmove == "left" or self.lastmove == "right":
+                    if self.pos[0] <= self.startpos[0]:
+                        self.moveMarker("down", 1)
+                else:
+                    if self.pos[1] <= self.startpos[1]:
+                        self.moveMarker("right", 1)
 
         return
 
-    def moveMarker(self, markerid, direction, amount):
-        y,x = self.projector.markerpos[markerid]
+    def moveMarker(self, direction, amount):
+        y,x = self.pos
         if direction == "left":
             x -= amount
             if x < 0:
                 x = 0
         elif direction == "right":
             x += amount
-            if x > self.projector.width - self.projector.markertotalsize:
-                x = self.projector.width - self.projector.markertotalsize
+            if x > self.projector.width - self.sizewithborder:
+                x = self.projector.width - self.sizewithborder
         elif direction == "up":
             y -= amount
             if y < 0:
                 y = 0
         elif direction == "down":
             y += amount
-            if y > self.projector.height - self.projector.markertotalsize:
-                y = self.projector.height - self.projector.markertotalsize
-        self.projector.markerpos[markerid] = (y, x)
+            if y > self.projector.height - self.sizewithborder:
+                y = self.projector.height - self.sizewithborder
+        self.pos = (y, x)
+        self.lastmove = direction
         return
 
 

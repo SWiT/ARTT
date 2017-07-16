@@ -44,6 +44,8 @@ class Zone:
 
     def recalibrate(self):
         self.calibrated = False
+        for cm in self.projector.calmarker:
+            cm.resetpos()
         self.projector.renderCalibrationImage()
         self.projector.outputCalibrationImage()
         return

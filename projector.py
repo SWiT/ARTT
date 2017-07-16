@@ -12,19 +12,11 @@ class CalibrationMarker:
         self.border = self.size/6
         self.sizewithborder = self.size + self.border * 2
 
-        # Initial marker positions.
-        if markerid == 0:
-            pos = (projector.height/2 - self.sizewithborder, projector.width/2 - self.sizewithborder)
-        elif markerid == 1:
-            pos = (projector.height/2 - self.sizewithborder, projector.width/2)
-        elif markerid == 2:
-            pos =(projector.height/2, projector.width/2)
-        elif markerid == 3:
-            pos = (projector.height/2, projector.width/2 - self.sizewithborder)
+        self.pos = [0,0]
+        self.resetpos()
+        self.startpos = self.pos
 
-        self.pos = pos
-        self.startpos = pos
-        self.calpos = pos
+        self.calpos = [0,0]
 
         # Draw marker image with a white border
         arucodict = aruco.Dictionary_get(aruco.DICT_4X4_50)   # Prepare the marker dictionary.
@@ -37,6 +29,16 @@ class CalibrationMarker:
         self.maxtime = 3.0 # seconds
         return
 
+    def resetpos(self):
+        # Initial marker positions.
+        if self.markerid == 0:
+            self.pos = (self.projector.height/2 - self.sizewithborder, self.projector.width/2 - self.sizewithborder)
+        elif self.markerid == 1:
+            self.pos = (self.projector.height/2 - self.sizewithborder, self.projector.width/2)
+        elif self.markerid == 2:
+            self.pos =(self.projector.height/2, self.projector.width/2)
+        elif self.markerid == 3:
+            self.pos = (self.projector.height/2, self.projector.width/2 - self.sizewithborder)
 
     def resolve(self):
         detectedIds = self.projector.zone.detectedIds

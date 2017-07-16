@@ -49,7 +49,26 @@ class CalibrationMarker:
                 if self.lastmove == "left" or self.lastmove == "right":
                     self.moveMarker("up", 2)
                 else:
-                    self.moveMarker("left", 6)
+                    self.moveMarker("left", 3)
+
+            elif self.markerid == 1:
+                if self.lastmove == "left" or self.lastmove == "right":
+                    self.moveMarker("up", 2)
+                else:
+                    self.moveMarker("right", 3)
+
+            elif self.markerid == 2:
+                if self.lastmove == "left" or self.lastmove == "right":
+                    self.moveMarker("down", 2)
+                else:
+                    self.moveMarker("right", 3)
+
+            elif self.markerid == 3:
+                if self.lastmove == "left" or self.lastmove == "right":
+                    self.moveMarker("down", 2)
+                else:
+                    self.moveMarker("left", 3)
+
 
 
         # Marker was not found for maxtime.
@@ -58,6 +77,30 @@ class CalibrationMarker:
                 if self.lastmove == "left" or self.lastmove == "right":
                     if self.pos[0] <= self.startpos[0]:
                         self.moveMarker("down", 1)
+                else:
+                    if self.pos[1] <= self.startpos[1]:
+                        self.moveMarker("right", 1)
+
+            elif self.markerid == 1:
+                if self.lastmove == "left" or self.lastmove == "right":
+                    if self.pos[0] <= self.startpos[0]:
+                        self.moveMarker("down", 1)
+                else:
+                    if self.pos[1] >= self.startpos[1]:
+                        self.moveMarker("left", 1)
+
+            elif self.markerid == 2:
+                if self.lastmove == "left" or self.lastmove == "right":
+                    if self.pos[0] >= self.startpos[0]:
+                        self.moveMarker("up", 1)
+                else:
+                    if self.pos[1] >= self.startpos[1]:
+                        self.moveMarker("left", 1)
+
+            elif self.markerid == 3:
+                if self.lastmove == "left" or self.lastmove == "right":
+                    if self.pos[0] >= self.startpos[0]:
+                        self.moveMarker("up", 1)
                 else:
                     if self.pos[1] <= self.startpos[1]:
                         self.moveMarker("right", 1)

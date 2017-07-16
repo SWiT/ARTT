@@ -54,7 +54,6 @@ class CalibrationMarker:
             idx = list(detectedIds).index([self.markerid])
             self.calpos = self.projector.zone.detectedCorners[idx][0][self.markerid]
             if self.markerid == 0:
-                print "0",self.lastmove, self.foundX, self.foundY
                 if self.lastmove == "left":
                     self.moveMarker("up", 2)
                 elif self.lastmove == "right":
@@ -67,20 +66,38 @@ class CalibrationMarker:
                     self.moveMarker("left", 3)
 
             elif self.markerid == 1:
-                if self.lastmove == "left" or self.lastmove == "right":
+                if self.lastmove == "right":
                     self.moveMarker("up", 2)
+                elif self.lastmove == "left":
+                    self.foundX = True
+                    self.lastmove = "right"
+                elif self.lastmove == "down":
+                    self.foundY = True
+                    self.lastmove = "up"
                 else:
                     self.moveMarker("right", 3)
 
             elif self.markerid == 2:
-                if self.lastmove == "left" or self.lastmove == "right":
+                if self.lastmove == "right":
                     self.moveMarker("down", 2)
+                elif self.lastmove == "left":
+                    self.foundX = True
+                    self.lastmove = "right"
+                elif self.lastmove == "up":
+                    self.foundY = True
+                    self.lastmove = "down"
                 else:
                     self.moveMarker("right", 3)
 
             elif self.markerid == 3:
-                if self.lastmove == "left" or self.lastmove == "right":
+                if self.lastmove == "left":
                     self.moveMarker("down", 2)
+                elif self.lastmove == "right":
+                    self.foundX = True
+                    self.lastmove = "left"
+                elif self.lastmove == "up":
+                    self.foundY = True
+                    self.lastmove = "down"
                 else:
                     self.moveMarker("left", 3)
 
@@ -88,35 +105,35 @@ class CalibrationMarker:
         elif self.lastseen > 0 and time.time() - self.lastseen >= self.maxtime:
             if self.markerid == 0:
                 if self.lastmove == "left" or self.lastmove == "right":
-                    if self.pos[1] <= self.startpos[1]:
-                        self.moveMarker("right", 1)
-                else:
                     if self.pos[0] <= self.startpos[0]:
                         self.moveMarker("down", 1)
+                else:
+                    if self.pos[1] <= self.startpos[1]:
+                        self.moveMarker("right", 1)
 
             elif self.markerid == 1:
                 if self.lastmove == "left" or self.lastmove == "right":
                     if self.pos[0] <= self.startpos[0]:
-                        self.moveMarker("down", 1)
+                        self.moveMarker("left", 1)
                 else:
                     if self.pos[1] >= self.startpos[1]:
-                        self.moveMarker("left", 1)
+                        self.moveMarker("down", 1)
 
             elif self.markerid == 2:
                 if self.lastmove == "left" or self.lastmove == "right":
                     if self.pos[0] >= self.startpos[0]:
-                        self.moveMarker("up", 1)
+                        self.moveMarker("left", 1)
                 else:
                     if self.pos[1] >= self.startpos[1]:
-                        self.moveMarker("left", 1)
+                        self.moveMarker("up", 1)
 
             elif self.markerid == 3:
                 if self.lastmove == "left" or self.lastmove == "right":
                     if self.pos[0] >= self.startpos[0]:
-                        self.moveMarker("up", 1)
+                        self.moveMarker("right", 1)
                 else:
                     if self.pos[1] <= self.startpos[1]:
-                        self.moveMarker("right", 1)
+                        self.moveMarker("up", 1)
 
         return
 

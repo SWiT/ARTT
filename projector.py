@@ -24,6 +24,8 @@ class CalibrationMarker:
         b = self.border
         self.image = cv2.copyMakeBorder(self.image, b, b, b, b, cv2.BORDER_CONSTANT, value=[255,255,255])
 
+        self.foundX = False
+        self.foundY = False
         self.lastmove = ""
         self.lastseen = 0
         self.maxtime = 3.0 # seconds
@@ -39,17 +41,28 @@ class CalibrationMarker:
             self.pos =(self.projector.height/2, self.projector.width/2)
         elif self.markerid == 3:
             self.pos = (self.projector.height/2, self.projector.width/2 - self.sizewithborder)
+        self.foundX = False
+        self.foundY = False
+        return
 
     def resolve(self):
         detectedIds = self.projector.zone.detectedIds
+
         # Marker was found
         if detectedIds is not None and self.markerid in self.projector.zone.detectedIds:
-            idx = list(detectedIds).index([self.markerid])
             self.lastseen = time.time()
+            idx = list(detectedIds).index([self.markerid])
             self.calpos = self.projector.zone.detectedCorners[idx][0][self.markerid]
             if self.markerid == 0:
-                if self.lastmove == "left" or self.lastmove == "right":
+                print "0",self.lastmove, self.foundX, self.foundY
+                if self.lastmove == "left":
                     self.moveMarker("up", 2)
+                elif self.lastmove == "right":
+                    self.foundX = True
+                    self.lastmove = "left"
+                elif self.lastmove == "down":
+                    self.foundY = True
+                    self.lastmove = "up"
                 else:
                     self.moveMarker("left", 3)
 
@@ -71,17 +84,15 @@ class CalibrationMarker:
                 else:
                     self.moveMarker("left", 3)
 
-
-
         # Marker was not found for maxtime.
-        elif time.time() - self.lastseen >= self.maxtime:
+        elif self.lastseen > 0 and time.time() - self.lastseen >= self.maxtime:
             if self.markerid == 0:
                 if self.lastmove == "left" or self.lastmove == "right":
-                    if self.pos[0] <= self.startpos[0]:
-                        self.moveMarker("down", 1)
-                else:
                     if self.pos[1] <= self.startpos[1]:
                         self.moveMarker("right", 1)
+                else:
+                    if self.pos[0] <= self.startpos[0]:
+                        self.moveMarker("down", 1)
 
             elif self.markerid == 1:
                 if self.lastmove == "left" or self.lastmove == "right":
@@ -111,19 +122,19 @@ class CalibrationMarker:
 
     def moveMarker(self, direction, amount):
         y,x = self.pos
-        if direction == "left":
+        if direction == "left" and not self.foundX:
             x -= amount
             if x < 0:
                 x = 0
-        elif direction == "right":
+        elif direction == "right" and not self.foundX:
             x += amount
             if x > self.projector.width - self.sizewithborder:
                 x = self.projector.width - self.sizewithborder
-        elif direction == "up":
+        elif direction == "up" and not self.foundY:
             y -= amount
             if y < 0:
                 y = 0
-        elif direction == "down":
+        elif direction == "down" and not self.foundY:
             y += amount
             if y > self.projector.height - self.sizewithborder:
                 y = self.projector.height - self.sizewithborder

@@ -15,16 +15,16 @@ class Zone:
         self.gridsize = (36, 24) # Grid size to apply to the zone.
 
         self.image = None
-        self.width = 0
-        self.height = 0
-        self.depth = 0
+        self.width = 1920
+        self.height = 1080
+        self.depth = 3
 
         # Initialize the project for the zone.
         # Set the projector image height and width to a little more than the projector's native resolution.
         self.projector = projector.Projector(self)
         cv2.namedWindow("ZoneProjector"+str(idx), cv2.WND_PROP_FULLSCREEN)
 
-        self.camera = camera.Camera(1080, 1920, "/dev/video0")
+        self.camera = camera.Camera(self.height, self.width, "/dev/video0")
         self.calibrated = False
         self.detectedCorners    = None
         self.detectedIds        = None

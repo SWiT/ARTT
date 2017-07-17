@@ -13,10 +13,9 @@ class CalibrationMarker:
         self.sizewithborder = self.size + self.border * 2
 
         self.pos = [0,0]
+        self.calpos = [0,0]
         self.resetpos()
         self.startpos = self.pos
-
-        self.calpos = [0,0]
 
         # Draw marker image with a white border
         arucodict = aruco.Dictionary_get(aruco.DICT_4X4_50)   # Prepare the marker dictionary.
@@ -41,6 +40,10 @@ class CalibrationMarker:
             self.pos =(self.projector.height/2, self.projector.width/2)
         elif self.markerid == 3:
             self.pos = (self.projector.height/2, self.projector.width/2 - self.sizewithborder)
+
+        #calibration positions
+        self.calpos = [self.projector.zone.height/2, self.projector.zone.width/2] #start and the midpoint of the zone.
+
         self.foundX = False
         self.foundY = False
         return
@@ -51,9 +54,14 @@ class CalibrationMarker:
         # Marker was found
         if detectedIds is not None and self.markerid in self.projector.zone.detectedIds:
             self.lastseen = time.time()
+
             idx = list(detectedIds).index([self.markerid])
-            self.calpos = self.projector.zone.detectedCorners[idx][0][self.markerid]
+            pt = self.projector.zone.detectedCorners[idx][0][self.markerid]
+            #print self.markerid, pt, self.calpos
+
             if self.markerid == 0:
+                self.calpos = pt
+
                 if self.lastmove == "left":
                     self.moveMarker("up", 2)
                 elif self.lastmove == "right":
@@ -63,9 +71,11 @@ class CalibrationMarker:
                     self.foundY = True
                     self.lastmove = "up"
                 else:
-                    self.moveMarker("left", 3)
+                    self.moveMarker("left", 4)
 
             elif self.markerid == 1:
+                self.calpos = pt
+
                 if self.lastmove == "right":
                     self.moveMarker("up", 2)
                 elif self.lastmove == "left":
@@ -75,9 +85,11 @@ class CalibrationMarker:
                     self.foundY = True
                     self.lastmove = "up"
                 else:
-                    self.moveMarker("right", 3)
+                    self.moveMarker("right", 4)
 
             elif self.markerid == 2:
+                self.calpos = pt
+
                 if self.lastmove == "right":
                     self.moveMarker("down", 2)
                 elif self.lastmove == "left":
@@ -87,9 +99,11 @@ class CalibrationMarker:
                     self.foundY = True
                     self.lastmove = "down"
                 else:
-                    self.moveMarker("right", 3)
+                    self.moveMarker("right", 4)
 
             elif self.markerid == 3:
+                self.calpos = pt
+
                 if self.lastmove == "left":
                     self.moveMarker("down", 2)
                 elif self.lastmove == "right":
@@ -99,7 +113,7 @@ class CalibrationMarker:
                     self.foundY = True
                     self.lastmove = "down"
                 else:
-                    self.moveMarker("left", 3)
+                    self.moveMarker("left", 4)
 
         # Marker was not found for maxtime.
         elif self.lastseen > 0 and time.time() - self.lastseen >= self.maxtime:

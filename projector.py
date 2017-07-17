@@ -12,8 +12,10 @@ class CalibrationMarker:
         self.border = self.size/6
         self.sizewithborder = self.size + self.border * 2
 
+        self.foundX = False
+        self.foundY = False
         self.pos = [0,0]
-        self.calpos = [0,0]
+        self.calpos = None
         self.resetpos()
         self.startpos = self.pos
 
@@ -23,8 +25,6 @@ class CalibrationMarker:
         b = self.border
         self.image = cv2.copyMakeBorder(self.image, b, b, b, b, cv2.BORDER_CONSTANT, value=[255,255,255])
 
-        self.foundX = False
-        self.foundY = False
         self.lastmove = ""
         self.lastseen = 0
         self.maxtime = 3.0 # seconds
@@ -42,7 +42,7 @@ class CalibrationMarker:
             self.pos = (self.projector.height/2, self.projector.width/2 - self.sizewithborder)
 
         #calibration positions
-        self.calpos = [self.projector.zone.height/2, self.projector.zone.width/2] #start and the midpoint of the zone.
+        self.calpos = None
 
         self.foundX = False
         self.foundY = False
@@ -57,10 +57,15 @@ class CalibrationMarker:
 
             idx = list(detectedIds).index([self.markerid])
             pt = self.projector.zone.detectedCorners[idx][0][self.markerid]
-            #print self.markerid, pt, self.calpos
 
             if self.markerid == 0:
-                self.calpos = pt
+                if self.calpos is None:
+                    self.calpos = pt
+                else:
+                    if pt[0] < self.calpos[0]:
+                        self.calpos = [pt[0], self.calpos[1]]
+                    if pt[1] < self.calpos[1]:
+                        self.calpos = [self.calpos[0], pt[1]]
 
                 if self.lastmove == "left":
                     self.moveMarker("up", 2)
@@ -74,7 +79,13 @@ class CalibrationMarker:
                     self.moveMarker("left", 4)
 
             elif self.markerid == 1:
-                self.calpos = pt
+                if self.calpos is None:
+                    self.calpos = pt
+                else:
+                    if pt[0] > self.calpos[0]:
+                        self.calpos = [pt[0], self.calpos[1]]
+                    if pt[1] < self.calpos[1]:
+                        self.calpos = [self.calpos[0], pt[1]]
 
                 if self.lastmove == "right":
                     self.moveMarker("up", 2)
@@ -88,7 +99,13 @@ class CalibrationMarker:
                     self.moveMarker("right", 4)
 
             elif self.markerid == 2:
-                self.calpos = pt
+                if self.calpos is None:
+                    self.calpos = pt
+                else:
+                    if pt[0] > self.calpos[0]:
+                        self.calpos = [pt[0], self.calpos[1]]
+                    if pt[1] > self.calpos[1]:
+                        self.calpos = [self.calpos[0], pt[1]]
 
                 if self.lastmove == "right":
                     self.moveMarker("down", 2)
@@ -102,7 +119,13 @@ class CalibrationMarker:
                     self.moveMarker("right", 4)
 
             elif self.markerid == 3:
-                self.calpos = pt
+                if self.calpos is None:
+                    self.calpos = pt
+                else:
+                    if pt[0] < self.calpos[0]:
+                        self.calpos = [pt[0], self.calpos[1]]
+                    if pt[1] > self.calpos[1]:
+                        self.calpos = [self.calpos[0], pt[1]]
 
                 if self.lastmove == "left":
                     self.moveMarker("down", 2)

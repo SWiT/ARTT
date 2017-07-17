@@ -90,7 +90,8 @@ class Zone:
         # Draw the projectors calibration points.
         region = []
         for cm in self.projector.calmarker:
-            region.append(list(cm.calpos))
+            if cm.calpos is not None:
+                region.append(list(cm.calpos))
         pts = np.array(region, np.int32)
         pts = pts.reshape((-1,1,2))
         cv2.polylines(outputImg, [pts], True, self.arena.ui.COLOR_BLUE, thickness = 2)

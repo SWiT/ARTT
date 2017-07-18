@@ -17,6 +17,8 @@ if __name__ == '__main__':
 
     cv2.setMouseCallback("ArenaControlPanel", Arena.ui.onMouse, Arena)
 
+    cv2.createTrackbar('bgcolor','ArenaControlPanel', 127, 255, Arena.ui.updateBGColor)
+
     ###############
     ## LOOP
     ###############

@@ -2,7 +2,8 @@ import cv2, time, re
 import numpy as np
 
 class UI:
-    def __init__(self):
+    def __init__(self, arena):
+        self.arena = arena
         self.COLOR_WHITE = (255,255,255)
         self.COLOR_BLUE = (255,0,0)
         self.COLOR_LBLUE = (255, 200, 100)
@@ -247,4 +248,9 @@ class UI:
             r = float(self.displaySize)/100
             img = cv2.resize(img, (0,0), fx=r, fy=r)
         return img
+
+    def updateBGColor(self, val):
+        for z in self.arena.zones:
+            z.projector.bgcolor = val
+        return
 

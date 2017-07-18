@@ -53,8 +53,8 @@ class CalibrationMarker:
         detectedIds = self.projector.zone.detectedIds
         sincelastseen = time.time() - self.lastseen
 
-        if not self.foundX and not self.foundY:
-            print self.markerid, self.pos, self.calpos, self.foundX, self.foundY, "%.2f" % sincelastseen
+        #if not self.foundX and not self.foundY:
+        #    print self.markerid, self.pos, self.calpos, self.foundX, self.foundY, "%.2f" % sincelastseen
 
         # Marker was found
         if detectedIds is not None and self.markerid in self.projector.zone.detectedIds:
@@ -217,6 +217,7 @@ class Projector:
         self.width = 800
         self.height = 600
         self.flip = True
+        self.bgcolor = 127
         self.baseimg        = None  # Base map texture on top of which output is drawn.
         self.calibrationimg = None  # The calibration image for lens adjustments.
         self.image          = None  # The image being output by the projector.
@@ -269,7 +270,7 @@ class Projector:
     def renderCalibrationImage(self):
         # Create a empty image.
         self.calibrationimg = np.zeros((self.height,self.width,3), np.uint8)
-        self.calibrationimg[:,:] = (127,127,127) #TODO: Make this adjustable via the control panel
+        self.calibrationimg[:,:] = (self.bgcolor, self.bgcolor, self.bgcolor)
 
         for markerid in range(0,4):
             y0 = self.calmarker[markerid].pos[0]

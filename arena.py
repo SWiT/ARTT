@@ -29,7 +29,7 @@ class Arena:
 
         self.buildZones()
 
-        self.ui = ui.UI()
+        self.ui = ui.UI(self)
 
         self.scantimeout = 1
 

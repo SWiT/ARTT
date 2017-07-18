@@ -27,19 +27,20 @@ class CalibrationMarker:
 
         self.lastmove = ""
         self.lastseen = 0
-        self.maxtime = 3.0 # seconds
+        self.mintime = 3.0 # seconds
+        self.maxtime = 10.0 # seconds
         return
 
     def resetpos(self):
         # Initial marker positions.
         if self.markerid == 0:
-            self.pos = (self.projector.height/2 - self.sizewithborder, self.projector.width/2 - self.sizewithborder)
+            self.pos = (self.projector.height/4 - self.sizewithborder/2, self.projector.width/4 - self.sizewithborder/2)
         elif self.markerid == 1:
-            self.pos = (self.projector.height/2 - self.sizewithborder, self.projector.width/2)
+            self.pos = (self.projector.height/4 - self.sizewithborder/2, self.projector.width*3/4 - self.sizewithborder/2)
         elif self.markerid == 2:
-            self.pos =(self.projector.height/2, self.projector.width/2)
+            self.pos =(self.projector.height*3/4 - self.sizewithborder/2, self.projector.width*3/4 - self.sizewithborder/2)
         elif self.markerid == 3:
-            self.pos = (self.projector.height/2, self.projector.width/2 - self.sizewithborder)
+            self.pos = (self.projector.height*3/4 - self.sizewithborder/2, self.projector.width/4 - self.sizewithborder/2)
 
         #calibration positions
         self.calpos = None
@@ -50,6 +51,10 @@ class CalibrationMarker:
 
     def resolve(self):
         detectedIds = self.projector.zone.detectedIds
+        sincelastseen = time.time() - self.lastseen
+
+        if not self.foundX and not self.foundY:
+            print self.markerid, self.pos, self.calpos, self.foundX, self.foundY, "%.2f" % sincelastseen
 
         # Marker was found
         if detectedIds is not None and self.markerid in self.projector.zone.detectedIds:
@@ -67,6 +72,11 @@ class CalibrationMarker:
                     if pt[1] < self.calpos[1]:
                         self.calpos = [self.calpos[0], pt[1]]
 
+                if self.pos[0] < 0 or self.pos[0] > self.projector.height - self.sizewithborder:
+                    self.foundY = True
+                if self.pos[1] < 0 or self.pos[1] > self.projector.width - self.sizewithborder:
+                    self.foundX = True
+
                 if self.lastmove == "left":
                     self.moveMarker("up", 2)
                 elif self.lastmove == "right":
@@ -138,8 +148,8 @@ class CalibrationMarker:
                 else:
                     self.moveMarker("left", 4)
 
-        # Marker was not found for maxtime.
-        elif self.lastseen > 0 and time.time() - self.lastseen >= self.maxtime:
+        # Marker was previosly seen, but hasn't been seen for more than mintime and less than maxtime.
+        elif self.lastseen > 0 and sincelastseen >= self.mintime and sincelastseen <= self.maxtime:
             if self.markerid == 0:
                 if self.lastmove == "left" or self.lastmove == "right":
                     if self.pos[0] <= self.startpos[0]:
@@ -172,6 +182,9 @@ class CalibrationMarker:
                     if self.pos[1] <= self.startpos[1]:
                         self.moveMarker("up", 1)
 
+        elif self.lastseen > 0 and sincelastseen <= self.maxtime:
+            self.foundX = True
+            self.foundY = True
         return
 
     def moveMarker(self, direction, amount):
